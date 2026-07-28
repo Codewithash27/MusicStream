@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { authApi, type LoginPayload, type RegisterPayload } from "../../api/auth";
@@ -10,12 +11,30 @@ export const authKeys = {
 
 export function useMeQuery(enabled = true) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-  return useQuery({
+  const setUser = useAuthStore((s) => s.setUser);
+  const clearSession = useAuthStore((s) => s.clearSession);
+
+  const query = useQuery({
     queryKey: authKeys.me,
     queryFn: authApi.me,
     enabled: enabled && isAuthenticated,
     staleTime: 60_000,
+    retry: 1,
   });
+
+  useEffect(() => {
+    if (query.data) setUser(query.data);
+  }, [query.data, setUser]);
+
+  useEffect(() => {
+    if (query.isError && isAuthenticated) {
+      // Session invalid — interceptor may already clear; ensure local state
+      const status = (query.error as { response?: { status?: number } })?.response?.status;
+      if (status === 401) clearSession();
+    }
+  }, [query.isError, query.error, isAuthenticated, clearSession]);
+
+  return query;
 }
 
 export function useLoginMutation() {

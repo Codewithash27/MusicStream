@@ -18,7 +18,12 @@ export function ProfilePage(): ReactElement {
   return (
     <div>
       <div className="mb-8 flex flex-col items-start gap-5 rounded-2xl border border-ms-border bg-gradient-to-br from-ms-elevated to-ms-bg p-6 sm:flex-row sm:items-center md:p-8">
-        <Avatar name={user?.display_name ?? "User"} size="lg" className="h-28 w-28 text-3xl" />
+        <Avatar
+          name={user?.display_name ?? "User"}
+          imageUrl={user?.avatar_url}
+          size="lg"
+          className="h-28 w-28 text-3xl"
+        />
         <div className="flex-1">
           <p className="text-xs font-semibold uppercase tracking-widest text-ms-muted">Profile</p>
           <h1 className="mt-1 font-display text-4xl font-extrabold">

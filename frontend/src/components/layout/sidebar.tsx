@@ -82,7 +82,7 @@ export function Sidebar({ open, onClose }: SidebarProps): ReactElement {
 
         <div className="mt-auto rounded-xl bg-ms-surface p-3">
           <div className="mb-3 flex items-center gap-3">
-            <Avatar name={user?.display_name ?? "User"} />
+            <Avatar name={user?.display_name ?? "User"} imageUrl={user?.avatar_url} />
             <div className="min-w-0">
               <p className="truncate text-sm font-semibold">{user?.display_name ?? "Guest"}</p>
               <p className="truncate text-xs text-ms-muted">{user?.role ?? "USER"}</p>

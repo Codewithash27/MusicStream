@@ -15,7 +15,7 @@ from app.models.user import User
 from app.repositories.artist import ArtistRepository
 from app.repositories.song import SongRepository
 from app.schemas.song import SongListResponse, SongResponse, SongUpdate
-from app.services.storage import StorageBackend, get_storage, key_from_public_url
+from app.services.storage import StorageService, get_storage_service
 from app.utils.files import read_and_validate_audio, read_and_validate_cover
 
 
@@ -23,12 +23,12 @@ class SongService:
     def __init__(
         self,
         session: AsyncSession,
-        storage: StorageBackend | None = None,
+        storage: StorageService | None = None,
     ) -> None:
         self.session = session
         self.songs = SongRepository(session)
         self.artists = ArtistRepository(session)
-        self.storage = storage or get_storage()
+        self.storage = storage or get_storage_service()
         self.settings = get_settings()
 
     async def create(
@@ -56,18 +56,20 @@ class SongService:
             )
 
         song_id = uuid.uuid4()
-        audio_key = f"songs/{artist.id}/{song_id}/audio{audio_file.extension}"
-        audio_url = await self.storage.upload(
-            key=audio_key,
+        audio_path = f"{artist.id}/{song_id}/audio{audio_file.extension}"
+        audio_url = await self.storage.upload_file(
+            bucket=self.storage.bucket_songs,
+            path=audio_path,
             content=audio_file.content,
             content_type=audio_file.content_type,
         )
 
         cover_url = None
         if cover_file:
-            cover_key = f"songs/{artist.id}/{song_id}/cover{cover_file.extension}"
-            cover_url = await self.storage.upload(
-                key=cover_key,
+            cover_path = f"{artist.id}/{song_id}/cover{cover_file.extension}"
+            cover_url = await self.storage.upload_file(
+                bucket=self.storage.bucket_covers,
+                path=cover_path,
                 content=cover_file.content,
                 content_type=cover_file.content_type,
             )
@@ -142,26 +144,28 @@ class SongService:
                 audio,
                 max_bytes=self.settings.max_audio_upload_bytes,
             )
-            await self._delete_object_url(song.audio_url)
-            key = f"songs/{song.artist_id}/{song.id}/audio{audio_file.extension}"
-            song.audio_url = await self.storage.upload(
-                key=key,
+            await self.storage.delete_by_public_url(song.audio_url)
+            path = f"{song.artist_id}/{song.id}/audio{audio_file.extension}"
+            song.audio_url = await self.storage.upload_file(
+                bucket=self.storage.bucket_songs,
+                path=path,
                 content=audio_file.content,
                 content_type=audio_file.content_type,
             )
 
         if data.clear_cover:
-            await self._delete_object_url(song.cover_url)
+            await self.storage.delete_by_public_url(song.cover_url)
             song.cover_url = None
         elif cover is not None and cover.filename:
             cover_file = await read_and_validate_cover(
                 cover,
                 max_bytes=self.settings.max_cover_upload_bytes,
             )
-            await self._delete_object_url(song.cover_url)
-            key = f"songs/{song.artist_id}/{song.id}/cover{cover_file.extension}"
-            song.cover_url = await self.storage.upload(
-                key=key,
+            await self.storage.delete_by_public_url(song.cover_url)
+            path = f"{song.artist_id}/{song.id}/cover{cover_file.extension}"
+            song.cover_url = await self.storage.upload_file(
+                bucket=self.storage.bucket_covers,
+                path=path,
                 content=cover_file.content,
                 content_type=cover_file.content_type,
             )
@@ -171,10 +175,36 @@ class SongService:
         refreshed = await self.songs.get_by_id(song.id)
         return SongResponse.model_validate(refreshed)
 
+    async def set_cover(
+        self,
+        *,
+        song_id: uuid.UUID,
+        user: User,
+        cover: UploadFile,
+    ) -> SongResponse:
+        """Replace song cover art and persist public URL."""
+        song = await self._get_owned_song(song_id, user)
+        cover_file = await read_and_validate_cover(
+            cover,
+            max_bytes=self.settings.max_cover_upload_bytes,
+        )
+        await self.storage.delete_by_public_url(song.cover_url)
+        path = f"{song.artist_id}/{song.id}/cover{cover_file.extension}"
+        song.cover_url = await self.storage.upload_file(
+            bucket=self.storage.bucket_covers,
+            path=path,
+            content=cover_file.content,
+            content_type=cover_file.content_type,
+        )
+        await self.session.flush()
+        await self.session.commit()
+        refreshed = await self.songs.get_by_id(song.id)
+        return SongResponse.model_validate(refreshed)
+
     async def delete(self, *, song_id: uuid.UUID, user: User) -> None:
         song = await self._get_owned_song(song_id, user)
-        await self._delete_object_url(song.audio_url)
-        await self._delete_object_url(song.cover_url)
+        await self.storage.delete_by_public_url(song.audio_url)
+        await self.storage.delete_by_public_url(song.cover_url)
         await self.songs.delete(song)
         await self.session.commit()
 
@@ -195,10 +225,3 @@ class SongService:
         if profile is None or song.artist_id != profile.id:
             raise ForbiddenError("You can only modify your own songs")
         return song
-
-    async def _delete_object_url(self, url: str | None) -> None:
-        if not url:
-            return
-        key = key_from_public_url(url, self.settings)
-        if key:
-            await self.storage.delete(key)

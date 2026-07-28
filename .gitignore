@@ -23,7 +23,7 @@ htmlcov/
 *.local
 
 # Local media uploads
-**/uploads/
+uploads/
 
 # IDE / OS
 .idea/

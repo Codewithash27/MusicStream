@@ -4,7 +4,7 @@ import { usePlayerStore } from "../../store/player.store";
 
 /**
  * Real HTMLAudioElement bridge. Replaces the previous simulated ticker
- * so playback actually produces sound from backend /media URLs.
+ * so playback actually produces sound from track audio URLs.
  */
 export function AudioEngine(): ReactElement {
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -40,6 +40,13 @@ export function AudioEngine(): ReactElement {
 
     if (isPlaying) {
       void el.play().catch(() => pause());
+    }
+
+    // Fire-and-forget play count increment
+    if (current.id) {
+      void import("../../api/songs").then(({ songsApi }) => {
+        void songsApi.play(current.id).catch(() => undefined);
+      });
     }
     // intentionally only when track identity / epoch changes
     // eslint-disable-next-line react-hooks/exhaustive-deps

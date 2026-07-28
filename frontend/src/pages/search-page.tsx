@@ -11,7 +11,7 @@ import { useAlbumsQuery } from "../features/albums/hooks";
 import { usePlaylistsQuery } from "../features/playlists/hooks";
 import { useSongsQuery } from "../features/songs/hooks";
 import { albumCoverStyle } from "../utils/mappers";
-import { SEARCH_CATEGORIES } from "../utils/mock-data";
+import { SEARCH_CATEGORIES } from "../utils/search-categories";
 
 export function SearchPage(): ReactElement {
   const [q, setQ] = useState("");

@@ -14,7 +14,7 @@ import { Input } from "../components/common/input";
 import { PageHeader } from "../components/common/section-header";
 import { useUploadSongMutation } from "../features/songs/hooks";
 
-const MAX_AUDIO_BYTES = 20 * 1024 * 1024;
+const MAX_AUDIO_BYTES = 25 * 1024 * 1024;
 const MAX_COVER_BYTES = 5 * 1024 * 1024;
 
 function formatBytes(n: number): string {
@@ -49,7 +49,7 @@ export function UploadSongPage(): ReactElement {
       return;
     }
     if (file.size > MAX_AUDIO_BYTES) {
-      setLocalError(`Audio must be under 20MB (got ${formatBytes(file.size)}).`);
+      setLocalError(`Audio must be under 25MB (got ${formatBytes(file.size)}).`);
       return;
     }
     setAudio(file);
@@ -57,6 +57,18 @@ export function UploadSongPage(): ReactElement {
       const base = file.name.replace(/\.mp3$/i, "").replace(/^\d+\s*/, "");
       setTitle(base.slice(0, 255));
     }
+    // Auto-detect duration from the file
+    const objectUrl = URL.createObjectURL(file);
+    const audioEl = new Audio();
+    audioEl.preload = "metadata";
+    audioEl.onloadedmetadata = () => {
+      if (Number.isFinite(audioEl.duration) && audioEl.duration > 0) {
+        setDurationSeconds(String(Math.max(1, Math.round(audioEl.duration))));
+      }
+      URL.revokeObjectURL(objectUrl);
+    };
+    audioEl.onerror = () => URL.revokeObjectURL(objectUrl);
+    audioEl.src = objectUrl;
   };
 
   const onCoverChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -159,7 +171,7 @@ export function UploadSongPage(): ReactElement {
           ) : (
             <>
               <p className="font-semibold">Drop your MP3 here</p>
-              <p className="mt-1 text-sm text-ms-muted">or click to browse · max 20MB</p>
+              <p className="mt-1 text-sm text-ms-muted">or click to browse · max 25MB</p>
             </>
           )}
           <input
@@ -260,7 +272,7 @@ export function UploadSongPage(): ReactElement {
         ) : (
           <div className="flex items-start gap-3 rounded-xl bg-ms-elevated p-4 text-sm text-ms-muted">
             <Music2 className="mt-0.5 shrink-0 text-ms-primary" size={18} />
-            MP3 required · ARTIST or ADMIN only · max 20MB audio
+            MP3 required · ARTIST or ADMIN only · max 25MB audio
           </div>
         )}
 

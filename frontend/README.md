@@ -1,38 +1,33 @@
 # MusicStream Frontend
 
-Dark Spotify-inspired UI for MusicStream. Pages use mock data — API wiring comes next.
+React 19 + Vite + TypeScript + Tailwind + TanStack Query + Zustand.
 
-## Run
+## Setup
 
 ```bash
+cd frontend
 npm install
 copy .env.example .env
 npm run dev
 ```
 
-Open http://localhost:5173
+Set the API base URL in `.env`:
 
-## Pages
+```env
+VITE_APP_NAME=MusicStream
+VITE_API_BASE_URL=http://127.0.0.1:8000/api/v1
+VITE_PORT=5173
+```
 
-| Route | Page |
-|-------|------|
-| `/` | Landing |
-| `/login` | Login |
-| `/register` | Register |
-| `/home` | Home |
-| `/search` | Search |
-| `/library` | Library |
-| `/playlist/:id` | Playlist |
-| `/album/:id` | Album |
-| `/artist/:id` | Artist |
-| `/upload` | Upload Song |
-| `/dashboard` | Artist Dashboard |
-| `/settings` | Settings |
-| `/profile` | Profile |
-| `*` | 404 |
+## Features (live API)
 
-## Design
+- Auth: register, login, logout, session hydrate via `/auth/me`
+- JWT access + refresh stored in Zustand (`localStorage` key `musicstream-auth`)
+- Automatic token refresh on 401
+- Songs: list, detail (`/song/:id`), upload, play-count
+- Albums & playlists: list, detail, create playlist, add song to playlist
+- Artist pages from `artist_id` song/album filters
+- Avatar upload/delete on Settings (`POST/DELETE /users/avatar`)
+- Loading / error / empty states via `QueryState`
 
-- Primary `#1DB954` · Background `#121212` · Surface `#181818`
-- Fonts: Syne (display) + DM Sans (body)
-- Reusable: Button, Input, SongRow, MediaTile, Sidebar, PlayerBar, etc.
+App: http://localhost:5173

@@ -46,7 +46,7 @@ export function TopBar({ title, onMenuClick }: TopBarProps): ReactElement {
           <Bell size={18} />
         </button>
         <Link to="/profile" className="rounded-full p-1 hover:bg-white/5">
-          <Avatar name={user?.display_name ?? "User"} size="sm" />
+          <Avatar name={user?.display_name ?? "User"} imageUrl={user?.avatar_url} size="sm" />
         </Link>
       </div>
     </header>

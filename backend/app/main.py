@@ -33,14 +33,21 @@ Most protected routes expect an **HTTP Bearer** access token.
 
 ### Songs
 
-- `POST /api/v1/songs` — upload MP3 (+ optional cover) — **ARTIST/ADMIN**  
+- `POST /api/v1/songs` / `POST /api/v1/songs/upload` — upload MP3 (+ optional cover) — **ARTIST/ADMIN**  
+- `POST /api/v1/songs/{id}/cover` — upload or replace cover  
 - `GET /api/v1/songs` — list / search  
 - `GET /api/v1/songs/{id}` — detail  
 - `PATCH /api/v1/songs/{id}` — update metadata / replace files  
-- `DELETE /api/v1/songs/{id}` — delete  
+- `DELETE /api/v1/songs/{id}` — delete (DB + storage objects)  
 - `POST /api/v1/songs/{id}/play` — increment play count  
 
-Files are stored in **Cloudflare R2 / S3** (or local `uploads/` when `STORAGE_BACKEND=local`).
+### Users
+
+- `POST /api/v1/users/avatar` — upload profile avatar  
+- `DELETE /api/v1/users/avatar` — remove avatar  
+
+**New uploads** are stored securely in **Supabase Storage**.  
+Legacy `/media/...` URLs (older local uploads) are served read-only when present on disk.
 
 ### Roles
 
@@ -77,10 +84,11 @@ def create_app() -> FastAPI:
     register_exception_handlers(app)
     app.include_router(api_router, prefix=settings.api_v1_prefix)
 
-    if settings.storage_backend.lower() == "local":
-        upload_dir = Path(settings.local_upload_dir)
-        upload_dir.mkdir(parents=True, exist_ok=True)
-        app.mount("/media", StaticFiles(directory=str(upload_dir)), name="media")
+    # Read-only legacy media (songs uploaded before Supabase Storage).
+    # New uploads always go to Supabase; this only serves existing /media/... URLs.
+    legacy_uploads = Path("uploads")
+    legacy_uploads.mkdir(parents=True, exist_ok=True)
+    app.mount("/media", StaticFiles(directory=str(legacy_uploads)), name="media")
 
     @app.get("/", include_in_schema=False)
     async def root() -> dict[str, str]:

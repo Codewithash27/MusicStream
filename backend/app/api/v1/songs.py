@@ -28,15 +28,18 @@ def get_song_service(
     status_code=status.HTTP_201_CREATED,
     summary="Upload a song",
     description=(
-        "Upload an MP3 (required) and optional cover image. "
-        "Requires **ARTIST** or **ADMIN** role. "
-        "An artist profile is created automatically if missing."
+        "Upload an MP3 (**audio/mpeg**, max **25MB**) and optional cover "
+        "(**JPEG/PNG/WebP**, max **5MB**). "
+        "Files are stored securely in Supabase Storage; public URLs are saved in PostgreSQL. "
+        "Requires **ARTIST** or **ADMIN**. Alias: `POST /songs/upload`."
     ),
     responses={
         201: {"description": "Song created"},
         400: {"description": "Invalid file type or size"},
         401: {"description": "Not authenticated"},
         403: {"description": "Not an artist/admin"},
+        502: {"description": "Storage upload failed"},
+        503: {"description": "Storage unavailable"},
     },
 )
 async def create_song(
@@ -44,10 +47,54 @@ async def create_song(
     service: Annotated[SongService, Depends(get_song_service)],
     title: Annotated[str, Form(min_length=1, max_length=255)],
     duration_seconds: Annotated[int, Form(ge=1, le=86_400)],
-    audio: Annotated[UploadFile, File(description="MP3 audio file")],
+    audio: Annotated[UploadFile, File(description="MP3 audio file (audio/mpeg, max 25MB)")],
     cover: Annotated[
         UploadFile | None,
-        File(description="Cover image (JPEG/PNG/WebP)"),
+        File(description="Cover image JPEG/PNG/WebP (max 5MB)"),
+    ] = None,
+    album_id: Annotated[uuid.UUID | None, Form()] = None,
+    track_number: Annotated[int | None, Form(ge=1, le=999)] = None,
+) -> SongResponse:
+    return await service.create(
+        user=user,
+        title=title,
+        duration_seconds=duration_seconds,
+        audio=audio,
+        cover=cover,
+        album_id=album_id,
+        track_number=track_number,
+    )
+
+
+@router.post(
+    "/upload",
+    response_model=SongResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Upload a song (alias)",
+    description=(
+        "Same as `POST /songs`. Uploads an MP3 (**audio/mpeg**, max **25MB**) "
+        "and optional cover (**JPEG/PNG/WebP**, max **5MB**). "
+        "Files are stored securely in Supabase Storage. "
+        "Stores public URLs in PostgreSQL. Requires **ARTIST** or **ADMIN**."
+    ),
+    responses={
+        201: {"description": "Song created with public audio/cover URLs"},
+        400: {"description": "Invalid MIME type or file too large"},
+        401: {"description": "Not authenticated"},
+        403: {"description": "Not an artist/admin"},
+        502: {"description": "Storage upload failed"},
+        503: {"description": "Storage unavailable"},
+    },
+)
+async def upload_song(
+    user: ArtistUser,
+    service: Annotated[SongService, Depends(get_song_service)],
+    title: Annotated[str, Form(min_length=1, max_length=255)],
+    duration_seconds: Annotated[int, Form(ge=1, le=86_400)],
+    audio: Annotated[UploadFile, File(description="MP3 audio file (audio/mpeg, max 25MB)")],
+    cover: Annotated[
+        UploadFile | None,
+        File(description="Cover image JPEG/PNG/WebP (max 5MB)"),
     ] = None,
     album_id: Annotated[uuid.UUID | None, Form()] = None,
     track_number: Annotated[int | None, Form(ge=1, le=999)] = None,
@@ -163,6 +210,35 @@ async def delete_song(
 ) -> Response:
     await service.delete(song_id=song_id, user=user)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/{song_id}/cover",
+    response_model=SongResponse,
+    summary="Upload or replace song cover",
+    description=(
+        "Upload a cover image for an existing song "
+        "(**image/jpeg**, **image/png**, or **image/webp**, max **5MB**). "
+        "Files are stored securely in Supabase Storage. "
+        "Replaces any previous cover and updates `cover_url` in PostgreSQL. "
+        "Owner artist or ADMIN only."
+    ),
+    responses={
+        200: {"description": "Cover updated"},
+        400: {"description": "Invalid MIME type or file too large"},
+        403: {"description": "Not the song owner"},
+        404: {"description": "Song not found"},
+        502: {"description": "Storage upload failed"},
+        503: {"description": "Storage unavailable"},
+    },
+)
+async def upload_song_cover(
+    song_id: uuid.UUID,
+    user: ArtistUser,
+    service: Annotated[SongService, Depends(get_song_service)],
+    cover: Annotated[UploadFile, File(description="Cover image JPEG/PNG/WebP (max 5MB)")],
+) -> SongResponse:
+    return await service.set_cover(song_id=song_id, user=user, cover=cover)
 
 
 @router.post(

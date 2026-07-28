@@ -1,149 +1,292 @@
-"""Object storage abstraction (local filesystem or S3-compatible R2)."""
+"""Async Supabase Storage service (sole object-storage backend)."""
 
 from __future__ import annotations
 
 import logging
-from pathlib import Path
-from typing import Protocol
-from urllib.parse import urljoin
+from dataclasses import dataclass
+from typing import Any
+from urllib.parse import quote
+
+import httpx
 
 from app.core.config import Settings, get_settings
-from app.core.exceptions import AppException
+from app.core.exceptions import AppException, BadRequestError
 
 logger = logging.getLogger(__name__)
 
 
-class StorageBackend(Protocol):
-    async def upload(
-        self,
-        *,
-        key: str,
-        content: bytes,
-        content_type: str,
-    ) -> str:
-        """Upload bytes and return a publicly reachable URL."""
+@dataclass(frozen=True)
+class StoredObjectRef:
+    """Resolved bucket + object path for delete/update."""
 
-    async def delete(self, key: str) -> None:
-        """Delete an object by key (best-effort)."""
+    bucket: str
+    path: str
 
 
-class LocalStorageBackend:
-    """Store files under LOCAL_UPLOAD_DIR and expose via /media URL path."""
+class StorageService:
+    """
+    Reusable async Supabase Storage client.
 
-    def __init__(self, settings: Settings) -> None:
-        self.root = Path(settings.local_upload_dir).resolve()
-        self.root.mkdir(parents=True, exist_ok=True)
-        self.public_base = "/media/"
+    Public API:
+      - upload_file()
+      - delete_file()
+      - get_public_url()
+      - health()
+    """
 
-    async def upload(
-        self,
-        *,
-        key: str,
-        content: bytes,
-        content_type: str,
-    ) -> str:
-        path = self.root / key
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(content)
-        return urljoin(self.public_base, key.replace("\\", "/"))
-
-    async def delete(self, key: str) -> None:
-        path = self.root / key
-        if path.exists():
-            path.unlink()
-
-
-class S3StorageBackend:
-    """Cloudflare R2 / AWS S3 via aioboto3."""
-
-    def __init__(self, settings: Settings) -> None:
-        if not settings.s3_access_key_id or not settings.s3_secret_access_key:
+    def __init__(self, settings: Settings | None = None) -> None:
+        self.settings = settings or get_settings()
+        if not self.settings.supabase_url or not self.settings.supabase_service_role_key:
             raise AppException(
-                "S3 credentials are not configured",
+                "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required",
                 status_code=500,
                 code="storage_misconfigured",
             )
-        if not settings.s3_public_base_url:
-            raise AppException(
-                "S3_PUBLIC_BASE_URL is required for R2/S3 storage",
-                status_code=500,
-                code="storage_misconfigured",
-            )
-        self.settings = settings
-        self.bucket = settings.s3_bucket_name
-        self.public_base = settings.s3_public_base_url.rstrip("/") + "/"
+        self._supabase_base = self.settings.supabase_url.rstrip("/")
+        self._storage_api = f"{self._supabase_base}/storage/v1"
+        self._client: httpx.AsyncClient | None = None
 
-    def _client_kwargs(self) -> dict:
-        kwargs: dict = {
-            "service_name": "s3",
-            "aws_access_key_id": self.settings.s3_access_key_id,
-            "aws_secret_access_key": self.settings.s3_secret_access_key,
-            "region_name": self.settings.s3_region,
-        }
-        if self.settings.s3_endpoint_url:
-            kwargs["endpoint_url"] = self.settings.s3_endpoint_url
-        return kwargs
+    @property
+    def bucket_songs(self) -> str:
+        return self.settings.supabase_storage_bucket_songs
 
-    async def upload(
+    @property
+    def bucket_covers(self) -> str:
+        return self.settings.supabase_storage_bucket_covers
+
+    @property
+    def bucket_avatars(self) -> str:
+        return self.settings.supabase_storage_bucket_avatars
+
+    def get_public_url(self, *, bucket: str, path: str) -> str:
+        """Return a publicly reachable Supabase Storage URL."""
+        clean = path.lstrip("/")
+        encoded = "/".join(quote(part, safe="") for part in clean.split("/"))
+        return f"{self._storage_api}/object/public/{bucket}/{encoded}"
+
+    async def upload_file(
         self,
         *,
-        key: str,
+        bucket: str,
+        path: str,
         content: bytes,
         content_type: str,
+        upsert: bool = True,
     ) -> str:
-        import aioboto3
+        """Upload bytes to Supabase Storage and return the public URL."""
+        if not content:
+            raise BadRequestError("Upload content is empty")
+        clean = path.lstrip("/")
+        await self._upload(
+            bucket=bucket,
+            path=clean,
+            content=content,
+            content_type=content_type,
+            upsert=upsert,
+        )
+        return self.get_public_url(bucket=bucket, path=clean)
 
-        session = aioboto3.Session()
+    async def delete_file(self, *, bucket: str, path: str) -> None:
+        """Delete an object (best-effort with logging on failure)."""
+        clean = path.lstrip("/")
         try:
-            async with session.client(**self._client_kwargs()) as client:
-                await client.put_object(
-                    Bucket=self.bucket,
-                    Key=key,
-                    Body=content,
-                    ContentType=content_type,
-                )
+            await self._delete(bucket=bucket, path=clean)
+        except Exception:
+            logger.warning(
+                "Failed to delete Supabase object bucket=%s path=%s",
+                bucket,
+                clean,
+                exc_info=True,
+            )
+
+    async def delete_by_public_url(self, url: str | None) -> None:
+        """Parse a stored public URL and delete the underlying object."""
+        ref = self.parse_public_url(url)
+        if ref:
+            await self.delete_file(bucket=ref.bucket, path=ref.path)
+
+    def parse_public_url(self, url: str | None) -> StoredObjectRef | None:
+        """Extract bucket + path from a Supabase public object URL."""
+        if not url:
+            return None
+        marker = "/storage/v1/object/public/"
+        idx = url.find(marker)
+        if idx < 0:
+            return None
+        remainder = url[idx + len(marker) :]
+        parts = remainder.split("/", 1)
+        if len(parts) != 2 or not parts[0] or not parts[1]:
+            return None
+        return StoredObjectRef(bucket=parts[0], path=parts[1].split("?", 1)[0])
+
+    async def health(self) -> dict[str, Any]:
+        """Probe Supabase Storage connectivity and required buckets."""
+        try:
+            existing = await self._list_bucket_names()
+            buckets_ok = (
+                self.bucket_songs in existing
+                and self.bucket_covers in existing
+                and self.bucket_avatars in existing
+            )
+            if buckets_ok:
+                return {"status": "healthy", "storage": "supabase"}
+            return {
+                "status": "unhealthy",
+                "storage": "supabase",
+                "detail": "One or more required buckets are missing",
+                "buckets": {
+                    "songs": self.bucket_songs in existing,
+                    "covers": self.bucket_covers in existing,
+                    "avatars": self.bucket_avatars in existing,
+                },
+            }
         except Exception as exc:
-            logger.exception("S3 upload failed for key=%s", key)
+            logger.warning("Supabase Storage health check failed: %s", exc)
+            return {
+                "status": "unhealthy",
+                "storage": "supabase",
+                "detail": str(exc),
+            }
+
+    async def verify_startup(self) -> None:
+        """Validate Supabase Storage + required buckets at startup."""
+        result = await self.health()
+        if result.get("status") != "healthy":
             raise AppException(
-                "Failed to upload file to object storage",
-                status_code=502,
-                code="storage_upload_failed",
+                "Supabase Storage is unavailable or misconfigured",
+                status_code=503,
+                code="storage_unavailable",
+                details=result,
+            )
+        logger.info(
+            "Supabase Storage verified buckets=%s,%s,%s",
+            self.bucket_songs,
+            self.bucket_covers,
+            self.bucket_avatars,
+        )
+
+    async def aclose(self) -> None:
+        if self._client is not None:
+            await self._client.aclose()
+            self._client = None
+
+    def _headers(self, *, content_type: str | None = None) -> dict[str, str]:
+        headers = {
+            "Authorization": f"Bearer {self.settings.supabase_service_role_key}",
+            "apikey": self.settings.supabase_service_role_key or "",
+        }
+        if content_type:
+            headers["Content-Type"] = content_type
+        return headers
+
+    async def _http(self) -> httpx.AsyncClient:
+        if self._client is None:
+            self._client = httpx.AsyncClient(timeout=60.0)
+        return self._client
+
+    async def _upload(
+        self,
+        *,
+        bucket: str,
+        path: str,
+        content: bytes,
+        content_type: str,
+        upsert: bool,
+    ) -> None:
+        client = await self._http()
+        encoded = "/".join(quote(part, safe="") for part in path.split("/"))
+        url = f"{self._storage_api}/object/{bucket}/{encoded}"
+        headers = self._headers(content_type=content_type)
+        headers["x-upsert"] = "true" if upsert else "false"
+        try:
+            response = await client.post(url, content=content, headers=headers)
+        except httpx.HTTPError as exc:
+            raise AppException(
+                "Supabase Storage is unavailable",
+                status_code=503,
+                code="storage_unavailable",
                 details=str(exc),
             ) from exc
-        return urljoin(self.public_base, key)
 
-    async def delete(self, key: str) -> None:
-        import aioboto3
+        if response.status_code >= 400:
+            logger.error(
+                "Supabase upload error status=%s body=%s",
+                response.status_code,
+                response.text[:500],
+            )
+            raise AppException(
+                "Failed to upload file to Supabase Storage",
+                status_code=502,
+                code="storage_upload_failed",
+                details=response.text[:500],
+            )
 
-        session = aioboto3.Session()
+    async def _delete(self, *, bucket: str, path: str) -> None:
+        client = await self._http()
+        url = f"{self._storage_api}/object/{bucket}"
+        headers = self._headers(content_type="application/json")
         try:
-            async with session.client(**self._client_kwargs()) as client:
-                await client.delete_object(Bucket=self.bucket, Key=key)
-        except Exception:
-            logger.warning("Failed to delete object key=%s", key, exc_info=True)
+            response = await client.request(
+                "DELETE",
+                url,
+                headers=headers,
+                json={"prefixes": [path]},
+            )
+        except httpx.HTTPError as exc:
+            raise AppException(
+                "Supabase Storage is unavailable",
+                status_code=503,
+                code="storage_unavailable",
+                details=str(exc),
+            ) from exc
+        if response.status_code >= 400:
+            logger.warning(
+                "Supabase delete warning status=%s body=%s",
+                response.status_code,
+                response.text[:300],
+            )
+
+    async def _list_bucket_names(self) -> set[str]:
+        client = await self._http()
+        url = f"{self._storage_api}/bucket"
+        try:
+            response = await client.get(url, headers=self._headers())
+        except httpx.HTTPError as exc:
+            raise AppException(
+                "Supabase Storage is unavailable",
+                status_code=503,
+                code="storage_unavailable",
+                details=str(exc),
+            ) from exc
+        if response.status_code >= 400:
+            raise AppException(
+                "Failed to list Supabase Storage buckets",
+                status_code=503,
+                code="storage_unavailable",
+                details=response.text[:500],
+            )
+        payload = response.json()
+        if not isinstance(payload, list):
+            return set()
+        return {
+            str(item["name"])
+            for item in payload
+            if isinstance(item, dict) and item.get("name")
+        }
 
 
-def get_storage() -> StorageBackend:
-    """Factory for the configured storage backend."""
-    settings = get_settings()
-    backend = settings.storage_backend.lower().strip()
-    if backend in {"s3", "r2"}:
-        return S3StorageBackend(settings)
-    if backend == "local":
-        return LocalStorageBackend(settings)
-    raise AppException(
-        f"Unsupported STORAGE_BACKEND '{settings.storage_backend}'",
-        status_code=500,
-        code="storage_misconfigured",
-    )
+_storage_service: StorageService | None = None
 
 
-def key_from_public_url(url: str, settings: Settings | None = None) -> str | None:
-    """Best-effort extract storage key from a public URL."""
-    settings = settings or get_settings()
-    if url.startswith("/media/"):
-        return url.removeprefix("/media/")
-    base = (settings.s3_public_base_url or "").rstrip("/") + "/"
-    if base != "/" and url.startswith(base):
-        return url[len(base) :]
-    return None
+def get_storage_service() -> StorageService:
+    """Return a cached StorageService instance."""
+    global _storage_service
+    if _storage_service is None:
+        _storage_service = StorageService()
+    return _storage_service
+
+
+def reset_storage_service() -> None:
+    """Clear cached service (tests / settings reload)."""
+    global _storage_service
+    _storage_service = None

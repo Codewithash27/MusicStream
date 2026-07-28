@@ -40,3 +40,15 @@ export function useCreatePlaylistMutation() {
     },
   });
 }
+
+export function useAddSongToPlaylistMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ playlistId, songId }: { playlistId: string; songId: string }) =>
+      playlistsApi.addSong(playlistId, songId),
+    onSuccess: (_data, vars) => {
+      void queryClient.invalidateQueries({ queryKey: playlistKeys.all });
+      void queryClient.invalidateQueries({ queryKey: playlistKeys.detail(vars.playlistId) });
+    },
+  });
+}

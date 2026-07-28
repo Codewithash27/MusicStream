@@ -1,25 +1,48 @@
 import { Disc3, Heart, Play, Users } from "lucide-react";
-import type { ReactElement } from "react";
-import { Link } from "react-router-dom";
+import { useMemo, type ReactElement } from "react";
+import { Link, Navigate } from "react-router-dom";
 
 import { Button } from "../components/common/button";
+import { QueryState } from "../components/common/query-state";
 import { PageHeader } from "../components/common/section-header";
 import { SongRow } from "../components/common/song-row";
-import { MOCK_SONGS } from "../utils/mock-data";
-
-const stats = [
-  { label: "Total plays", value: "128.4K", icon: Play },
-  { label: "Followers", value: "12.9K", icon: Users },
-  { label: "Likes", value: "8.2K", icon: Heart },
-  { label: "Tracks", value: "24", icon: Disc3 },
-];
+import { getApiErrorMessage } from "../features/auth/hooks";
+import { useSongsQuery } from "../features/songs/hooks";
+import { useAuthStore } from "../store/auth.store";
 
 export function DashboardPage(): ReactElement {
+  const user = useAuthStore((s) => s.user);
+  const songs = useSongsQuery({ limit: 100 });
+
+  const mySongs = useMemo(() => {
+    const items = songs.data?.items ?? [];
+    if (!user) return [];
+    return items.filter(
+      (s) =>
+        s.artist?.stage_name === user.display_name ||
+        s.artist?.stage_name === user.username,
+    );
+  }, [songs.data?.items, user]);
+
+  const totalPlays = mySongs.reduce((sum, s) => sum + s.play_count, 0);
+  const topTracks = [...mySongs].sort((a, b) => b.play_count - a.play_count).slice(0, 8);
+
+  if (user && user.role !== "ARTIST" && user.role !== "ADMIN") {
+    return <Navigate to="/home" replace />;
+  }
+
+  const stats = [
+    { label: "Total plays", value: totalPlays.toLocaleString(), icon: Play },
+    { label: "Followers", value: "—", icon: Users },
+    { label: "Likes", value: "—", icon: Heart },
+    { label: "Tracks", value: String(mySongs.length), icon: Disc3 },
+  ];
+
   return (
     <div>
       <PageHeader
         title="Artist dashboard"
-        subtitle="Track performance for your catalog."
+        subtitle="Performance for your uploaded catalog."
         actions={
           <Link to="/upload">
             <Button>Upload song</Button>
@@ -39,41 +62,24 @@ export function DashboardPage(): ReactElement {
         ))}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
-        <section className="rounded-2xl border border-ms-border bg-ms-surface p-5">
-          <h2 className="mb-4 font-display text-xl font-bold">Top tracks</h2>
+      <section className="rounded-2xl border border-ms-border bg-ms-surface p-5">
+        <h2 className="mb-4 font-display text-xl font-bold">Top tracks</h2>
+        <QueryState
+          isLoading={songs.isLoading}
+          isError={songs.isError}
+          errorMessage={getApiErrorMessage(songs.error)}
+          onRetry={() => void songs.refetch()}
+          isEmpty={!topTracks.length}
+          emptyTitle="No uploads yet"
+          emptyDescription="Upload your first track to see stats here."
+        >
           <div>
-            {MOCK_SONGS.slice(0, 5).map((song, i) => (
-              <SongRow key={song.id} song={song} index={i + 1} showAlbum={false} />
+            {topTracks.map((song, i) => (
+              <SongRow key={song.id} song={song} index={i + 1} showAlbum={false} queue={topTracks} />
             ))}
           </div>
-        </section>
-
-        <section className="rounded-2xl border border-ms-border bg-ms-surface p-5">
-          <h2 className="mb-4 font-display text-xl font-bold">Audience</h2>
-          <div className="space-y-4">
-            {[
-              { city: "Mumbai", pct: 28 },
-              { city: "Delhi", pct: 21 },
-              { city: "Bengaluru", pct: 17 },
-              { city: "London", pct: 12 },
-            ].map((row) => (
-              <div key={row.city}>
-                <div className="mb-1 flex justify-between text-sm">
-                  <span>{row.city}</span>
-                  <span className="text-ms-muted">{row.pct}%</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-ms-elevated">
-                  <div
-                    className="h-full rounded-full bg-ms-primary"
-                    style={{ width: `${row.pct * 3}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </div>
+        </QueryState>
+      </section>
     </div>
   );
 }

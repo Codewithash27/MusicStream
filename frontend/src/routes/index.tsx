@@ -16,6 +16,7 @@ import { ProfilePage } from "../pages/profile-page";
 import { RegisterPage } from "../pages/register-page";
 import { SearchPage } from "../pages/search-page";
 import { SettingsPage } from "../pages/settings-page";
+import { SongDetailPage } from "../pages/song-detail-page";
 import { UploadSongPage } from "../pages/upload-song-page";
 
 export const router = createBrowserRouter([
@@ -39,6 +40,7 @@ export const router = createBrowserRouter([
           { path: "/playlist/:id", element: <PlaylistPage /> },
           { path: "/album/:id", element: <AlbumPage /> },
           { path: "/artist/:id", element: <ArtistPage /> },
+          { path: "/song/:id", element: <SongDetailPage /> },
           { path: "/upload", element: <UploadSongPage /> },
           { path: "/dashboard", element: <DashboardPage /> },
           { path: "/settings", element: <SettingsPage /> },

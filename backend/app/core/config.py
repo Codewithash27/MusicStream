@@ -75,24 +75,34 @@ class Settings(BaseSettings):
         alias="CORS_ALLOW_HEADERS",
     )
 
-    # Object storage (Cloudflare R2 / S3 / local)
-    storage_backend: str = Field(default="local", alias="STORAGE_BACKEND")
-    s3_endpoint_url: str | None = Field(default=None, alias="S3_ENDPOINT_URL")
-    s3_access_key_id: str | None = Field(default=None, alias="S3_ACCESS_KEY_ID")
-    s3_secret_access_key: str | None = Field(default=None, alias="S3_SECRET_ACCESS_KEY")
-    s3_bucket_name: str = Field(default="musicstream", alias="S3_BUCKET_NAME")
-    s3_region: str = Field(default="auto", alias="S3_REGION")
-    s3_public_base_url: str | None = Field(default=None, alias="S3_PUBLIC_BASE_URL")
-    local_upload_dir: str = Field(default="uploads", alias="LOCAL_UPLOAD_DIR")
+    # Supabase Storage (required — sole object-storage backend)
+    supabase_url: str = Field(..., alias="SUPABASE_URL")
+    supabase_service_role_key: str = Field(..., alias="SUPABASE_SERVICE_ROLE_KEY")
+    supabase_storage_bucket_songs: str = Field(
+        default="songs",
+        alias="SUPABASE_STORAGE_BUCKET_SONGS",
+    )
+    supabase_storage_bucket_covers: str = Field(
+        default="covers",
+        alias="SUPABASE_STORAGE_BUCKET_COVERS",
+    )
+    supabase_storage_bucket_avatars: str = Field(
+        default="avatars",
+        alias="SUPABASE_STORAGE_BUCKET_AVATARS",
+    )
 
-    # Upload limits (bytes)
+    # Upload limits (bytes) — songs 25MB, covers/avatars 5MB
     max_audio_upload_bytes: int = Field(
-        default=20 * 1024 * 1024,
+        default=25 * 1024 * 1024,
         alias="MAX_AUDIO_UPLOAD_BYTES",
     )
     max_cover_upload_bytes: int = Field(
         default=5 * 1024 * 1024,
         alias="MAX_COVER_UPLOAD_BYTES",
+    )
+    max_avatar_upload_bytes: int = Field(
+        default=5 * 1024 * 1024,
+        alias="MAX_AVATAR_UPLOAD_BYTES",
     )
 
     @property
