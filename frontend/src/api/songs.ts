@@ -31,6 +31,7 @@ export const songsApi = {
     return data;
   },
 
+  /** POST /songs/upload — MP3 + optional cover */
   upload: async (payload: UploadSongPayload): Promise<Song> => {
     const form = new FormData();
     form.append("title", payload.title);
@@ -45,7 +46,17 @@ export const songsApi = {
     if (payload.cover) {
       form.append("cover", payload.cover);
     }
-    const { data } = await api.post<Song>("/songs", form, { timeout: 120_000 });
+    const { data } = await api.post<Song>("/songs/upload", form, { timeout: 120_000 });
+    return data;
+  },
+
+  /** POST /songs/{id}/cover */
+  uploadCover: async (songId: string, cover: File): Promise<Song> => {
+    const form = new FormData();
+    form.append("cover", cover);
+    const { data } = await api.post<Song>(`/songs/${songId}/cover`, form, {
+      timeout: 60_000,
+    });
     return data;
   },
 };

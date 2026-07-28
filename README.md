@@ -167,7 +167,7 @@ MAX_AVATAR_UPLOAD_BYTES=5242880
 
 ```env
 VITE_APP_NAME=MusicStream
-VITE_API_BASE_URL=https://YOUR-API.onrender.com/api/v1
+VITE_API_URL=https://YOUR-API.onrender.com/api/v1
 ```
 
 4. Deploy → you get something like `https://musicstream.vercel.app`.  
@@ -198,7 +198,7 @@ VITE_API_BASE_URL=https://YOUR-API.onrender.com/api/v1
 - [ ] Supabase Storage buckets (`songs`, `covers`, `avatars`) created and public  
 - [ ] Render health is OK  
 - [ ] A song uploaded **after** storage is configured  
-- [ ] Vercel `VITE_API_BASE_URL` → Render `/api/v1`  
+- [ ] Vercel `VITE_API_URL` → Render `/api/v1`  
 - [ ] Render `CORS_ORIGINS` = exact Vercel URL  
 - [ ] You tested play in an Incognito window as a Listener  
 
@@ -245,7 +245,7 @@ git push origin main
 |---------|-----|
 | Friends see songs but no sound | Check Supabase buckets are public; re-upload songs |
 | CORS / network errors | Fix `CORS_ORIGINS`, redeploy API |
-| Wrong API on Vercel | Rebuild after setting `VITE_API_BASE_URL` |
+| Wrong API on Vercel | Rebuild after setting `VITE_API_URL` |
 | First load very slow | Render cold start — wait and refresh |
 | Login fails in prod | Check `DATABASE_URL` and `JWT_SECRET_KEY` on Render |
 | Upload fails | Verify `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` on Render |

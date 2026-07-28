@@ -3,11 +3,18 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "../store/auth.store";
 import type { ApiErrorBody, AuthResponse } from "../types/api";
 
-const baseURL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api/v1";
+/**
+ * Prefer VITE_API_URL (required by project config).
+ * Falls back to VITE_API_BASE_URL for older local .env files.
+ */
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL ??
+  import.meta.env.VITE_API_BASE_URL ??
+  "http://127.0.0.1:8000/api/v1";
 
 export const api = axios.create({
-  baseURL,
-  timeout: 20000,
+  baseURL: API_BASE_URL,
+  timeout: 20_000,
   headers: {
     "Content-Type": "application/json",
   },
@@ -24,7 +31,7 @@ async function refreshAccessToken(): Promise<string | null> {
 
   try {
     const { data } = await axios.post<AuthResponse>(
-      `${baseURL}/auth/refresh`,
+      `${API_BASE_URL}/auth/refresh`,
       { refresh_token: refreshToken },
       { headers: { "Content-Type": "application/json" } },
     );
@@ -45,7 +52,6 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  // Let browser set multipart boundary
   if (config.data instanceof FormData) {
     delete config.headers["Content-Type"];
   }
@@ -60,7 +66,11 @@ api.interceptors.response.use(
 
     if (status === 401 && original && !original._retry) {
       const url = original.url ?? "";
-      if (url.includes("/auth/login") || url.includes("/auth/register") || url.includes("/auth/refresh")) {
+      if (
+        url.includes("/auth/login") ||
+        url.includes("/auth/register") ||
+        url.includes("/auth/refresh")
+      ) {
         return Promise.reject(error);
       }
 
@@ -81,11 +91,7 @@ api.interceptors.response.use(
 
 export function getApiErrorMessage(error: unknown, fallback = "Something went wrong"): string {
   if (axios.isAxiosError<ApiErrorBody>(error)) {
-    return (
-      error.response?.data?.error?.message ||
-      error.message ||
-      fallback
-    );
+    return error.response?.data?.error?.message || error.message || fallback;
   }
   if (error instanceof Error) return error.message;
   return fallback;

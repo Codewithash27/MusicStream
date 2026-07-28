@@ -223,7 +223,7 @@ Before deploy, add:
 | Name | Value |
 |------|--------|
 | `VITE_APP_NAME` | `MusicStream` |
-| `VITE_API_BASE_URL` | `https://YOUR-API.onrender.com/api/v1` |
+| `VITE_API_URL` | `https://YOUR-API.onrender.com/api/v1` |
 
 Use your **NOTE 4** + `/api/v1`.
 
@@ -317,7 +317,7 @@ JWT_SECRET_KEY = (make one up, keep private)
 | What you see | What to do |
 |--------------|------------|
 | Health page fails | Wait for Render wake-up; check env vars and logs |
-| Frontend loads but login fails | Check `VITE_API_BASE_URL` and rebuild Vercel |
+| Frontend loads but login fails | Check `VITE_API_URL` and rebuild Vercel |
 | CORS error in browser console | `CORS_ORIGINS` must match Vercel URL exactly |
 | Songs list, no sound | Supabase buckets not public / wrong credentials / uploaded before storage was ready |
 | Upload fails | Check `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` on Render |
@@ -331,7 +331,7 @@ JWT_SECRET_KEY = (make one up, keep private)
 - [ ] `alembic upgrade head` OK  
 - [ ] Supabase Storage buckets (`songs`, `covers`, `avatars`) public  
 - [ ] Render API live + health OK  
-- [ ] Vercel site live + `VITE_API_BASE_URL` set  
+- [ ] Vercel site live + `VITE_API_URL` set  
 - [ ] Render `CORS_ORIGINS` = Vercel URL  
 - [ ] You uploaded songs as Artist (after storage is configured)  
 - [ ] Incognito Listener test plays audio  

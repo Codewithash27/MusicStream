@@ -37,3 +37,16 @@ export function useUploadSongMutation() {
     },
   });
 }
+
+export function useUploadSongCoverMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ songId, cover }: { songId: string; cover: File }) =>
+      songsApi.uploadCover(songId, cover),
+    onSuccess: (song) => {
+      void queryClient.invalidateQueries({ queryKey: songKeys.all });
+      queryClient.setQueryData(songKeys.detail(song.id), song);
+    },
+  });
+}
