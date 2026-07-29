@@ -1,4 +1,13 @@
-import { Clock3, PauseCircle, PlayCircle, Users } from "lucide-react";
+import {
+  Clock3,
+  LoaderCircle,
+  PauseCircle,
+  PlayCircle,
+  UserCheck,
+  UserRound,
+  UserX,
+  Users,
+} from "lucide-react";
 import { useMemo, useState, type ReactElement } from "react";
 import { Link, Navigate } from "react-router-dom";
 
@@ -131,11 +140,11 @@ export function AdminPage(): ReactElement {
         ))}
       </div>
 
-      <section className="rounded-2xl border border-ms-border bg-ms-surface p-5">
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <section className="rounded-2xl border border-ms-border bg-ms-surface p-4 sm:p-5">
+        <div className="mb-5 flex flex-col gap-3">
           <h2 className="font-display text-xl font-bold">Users</h2>
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <div className="flex rounded-full border border-ms-border bg-ms-elevated p-1 text-xs font-semibold">
+          <div className="flex flex-col gap-2 lg:flex-row lg:flex-wrap lg:items-center">
+            <div className="flex overflow-x-auto rounded-full border border-ms-border bg-ms-elevated p-1 text-xs font-semibold">
               {(["all", "active", "inactive"] as const).map((key) => (
                 <button
                   key={key}
@@ -145,7 +154,7 @@ export function AdminPage(): ReactElement {
                     setListenersOnly(false);
                   }}
                   className={cn(
-                    "rounded-full px-3 py-1.5 capitalize transition",
+                    "shrink-0 rounded-full px-3 py-1.5 capitalize transition",
                     filter === key && !listenersOnly
                       ? "bg-ms-primary text-black"
                       : "text-ms-muted hover:text-ms-text",
@@ -155,7 +164,7 @@ export function AdminPage(): ReactElement {
                 </button>
               ))}
             </div>
-            <div className="flex rounded-full border border-ms-border bg-ms-elevated p-1 text-xs font-semibold">
+            <div className="flex overflow-x-auto rounded-full border border-ms-border bg-ms-elevated p-1 text-xs font-semibold">
               <button
                 type="button"
                 onClick={() => {
@@ -163,7 +172,7 @@ export function AdminPage(): ReactElement {
                   setListenersOnly(false);
                 }}
                 className={cn(
-                  "rounded-full px-3 py-1.5 transition",
+                  "shrink-0 rounded-full px-3 py-1.5 transition",
                   sortMode === "newest" && !listenersOnly
                     ? "bg-ms-primary text-black"
                     : "text-ms-muted hover:text-ms-text",
@@ -175,7 +184,7 @@ export function AdminPage(): ReactElement {
                 type="button"
                 onClick={() => setSortMode("listen")}
                 className={cn(
-                  "rounded-full px-3 py-1.5 transition",
+                  "shrink-0 rounded-full px-3 py-1.5 transition",
                   sortMode === "listen"
                     ? "bg-ms-primary text-black"
                     : "text-ms-muted hover:text-ms-text",
@@ -187,7 +196,7 @@ export function AdminPage(): ReactElement {
                 type="button"
                 onClick={() => setListenersOnly((v) => !v)}
                 className={cn(
-                  "rounded-full px-3 py-1.5 transition",
+                  "shrink-0 rounded-full px-3 py-1.5 transition",
                   listenersOnly
                     ? "bg-ms-primary text-black"
                     : "text-ms-muted hover:text-ms-text",
@@ -198,7 +207,7 @@ export function AdminPage(): ReactElement {
               </button>
             </div>
             <form
-              className="flex gap-2"
+              className="flex w-full gap-2 lg:ml-auto lg:w-auto"
               onSubmit={(e) => {
                 e.preventDefault();
                 setQ(draftQ.trim());
@@ -208,7 +217,7 @@ export function AdminPage(): ReactElement {
                 value={draftQ}
                 onChange={(e) => setDraftQ(e.target.value)}
                 placeholder="Search email, username…"
-                className="h-10 w-full min-w-[200px] rounded-full border border-ms-border bg-ms-elevated px-4 text-sm outline-none focus:border-ms-primary sm:w-64"
+                className="h-10 min-w-0 flex-1 rounded-full border border-ms-border bg-ms-elevated px-4 text-sm outline-none focus:border-ms-primary lg:w-64 lg:flex-none"
               />
               <Button type="submit" size="sm" variant="secondary">
                 Search
@@ -226,89 +235,215 @@ export function AdminPage(): ReactElement {
           emptyTitle="No users found"
           emptyDescription="Try a different search or filter."
         >
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[720px] text-left text-sm">
-              <thead className="border-b border-ms-border text-ms-muted">
-                <tr>
-                  <th className="pb-3 font-medium">User</th>
-                  <th className="pb-3 font-medium">Role</th>
-                  <th className="pb-3 font-medium">Status</th>
-                  <th className="pb-3 font-medium">Listening</th>
-                  <th className="pb-3 font-medium text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {users.data?.items.map((row) => {
-                  const isSelf = row.id === user?.id;
-                  const busy =
-                    setActive.isPending && setActive.variables?.userId === row.id;
-                  return (
-                    <tr key={row.id} className="border-b border-ms-border/60">
-                      <td className="py-3 pr-4">
+          <div>
+            {/* Phone / small tablet cards */}
+            <div className="space-y-3 md:hidden">
+              {users.data?.items.map((row) => {
+                const isSelf = row.id === user?.id;
+                const busy =
+                  setActive.isPending && setActive.variables?.userId === row.id;
+                return (
+                  <div
+                    key={row.id}
+                    className="rounded-2xl border border-ms-border bg-ms-elevated/40 p-4"
+                  >
+                    <div className="flex items-start gap-3">
+                      <Link to={`/admin/users/${row.id}`} className="shrink-0">
+                        <Avatar name={row.display_name} imageUrl={row.avatar_url} />
+                      </Link>
+                      <div className="min-w-0 flex-1">
                         <Link
                           to={`/admin/users/${row.id}`}
-                          className="flex items-center gap-3 rounded-lg transition hover:bg-white/5"
+                          className="block truncate font-semibold hover:underline"
                         >
-                          <Avatar name={row.display_name} imageUrl={row.avatar_url} />
-                          <div className="min-w-0">
-                            <p className="truncate font-semibold hover:underline">
-                              {row.display_name}
-                            </p>
-                            <p className="truncate text-xs text-ms-muted">
-                              @{row.username} · {row.email}
-                            </p>
-                          </div>
+                          {row.display_name}
                         </Link>
-                      </td>
-                      <td className="py-3 pr-4 text-ms-muted">{row.role}</td>
-                      <td className="py-3 pr-4">
-                        <span
+                        <p className="truncate text-xs text-ms-muted">
+                          @{row.username}
+                        </p>
+                        <p className="truncate text-xs text-ms-muted">{row.email}</p>
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                          <span className="text-ms-muted">{row.role}</span>
+                          <span
+                            className={cn(
+                              "inline-flex rounded-full px-2 py-0.5 font-semibold",
+                              row.is_active
+                                ? "bg-emerald-500/15 text-emerald-400"
+                                : "bg-red-500/15 text-red-400",
+                            )}
+                          >
+                            {row.is_active ? "Active" : "Inactive"}
+                          </span>
+                          <span className="text-ms-muted">
+                            {formatListenTime(row.total_listen_seconds)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex shrink-0 gap-2">
+                        <Link
+                          to={`/admin/users/${row.id}`}
+                          title={`View ${row.display_name}'s profile`}
+                          aria-label={`View ${row.display_name}'s profile`}
+                          className="inline-flex size-9 items-center justify-center rounded-full border border-ms-border bg-ms-elevated text-ms-muted transition hover:border-ms-primary hover:text-ms-primary"
+                        >
+                          <UserRound size={17} aria-hidden="true" />
+                        </Link>
+                        <button
+                          type="button"
+                          title={
+                            isSelf
+                              ? "You cannot change your own status"
+                              : row.is_active
+                                ? `Deactivate ${row.display_name}`
+                                : `Activate ${row.display_name}`
+                          }
+                          aria-label={
+                            isSelf
+                              ? "Your account"
+                              : row.is_active
+                                ? `Deactivate ${row.display_name}`
+                                : `Activate ${row.display_name}`
+                          }
+                          disabled={isSelf || busy}
+                          onClick={() =>
+                            void setActive.mutateAsync({
+                              userId: row.id,
+                              is_active: !row.is_active,
+                            })
+                          }
                           className={cn(
-                            "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
+                            "inline-flex size-9 items-center justify-center rounded-full border transition disabled:cursor-not-allowed disabled:opacity-40",
                             row.is_active
-                              ? "bg-emerald-500/15 text-emerald-400"
-                              : "bg-red-500/15 text-red-400",
+                              ? "border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                              : "border-emerald-500/40 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20",
                           )}
                         >
-                          {row.is_active ? "Active" : "Inactive"}
-                        </span>
-                      </td>
-                      <td className="py-3 pr-4 text-ms-muted">
-                        {formatListenTime(row.total_listen_seconds)}
-                      </td>
-                      <td className="py-3 text-right">
-                        <div className="flex justify-end gap-2">
-                          <Link to={`/admin/users/${row.id}`}>
-                            <Button size="sm" variant="secondary">
-                              Profile
-                            </Button>
-                          </Link>
-                          <Button
-                            size="sm"
-                            variant={row.is_active ? "danger" : "secondary"}
-                            disabled={isSelf || busy}
-                            onClick={() =>
-                              void setActive.mutateAsync({
-                                userId: row.id,
-                                is_active: !row.is_active,
-                              })
-                            }
+                          {busy ? (
+                            <LoaderCircle size={17} className="animate-spin" aria-hidden="true" />
+                          ) : row.is_active ? (
+                            <UserX size={17} aria-hidden="true" />
+                          ) : (
+                            <UserCheck size={17} aria-hidden="true" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Tablet / desktop table */}
+            <div className="hidden overflow-x-auto md:block">
+              <table className="w-full min-w-[640px] text-left text-sm lg:min-w-0">
+                <thead className="border-b border-ms-border text-ms-muted">
+                  <tr>
+                    <th className="pb-3 font-medium">User</th>
+                    <th className="pb-3 font-medium">Role</th>
+                    <th className="pb-3 font-medium">Status</th>
+                    <th className="pb-3 font-medium">Listening</th>
+                    <th className="pb-3 font-medium text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.data?.items.map((row) => {
+                    const isSelf = row.id === user?.id;
+                    const busy =
+                      setActive.isPending && setActive.variables?.userId === row.id;
+                    return (
+                      <tr key={row.id} className="border-b border-ms-border/60">
+                        <td className="py-3 pr-4">
+                          <Link
+                            to={`/admin/users/${row.id}`}
+                            className="flex items-center gap-3 rounded-lg transition hover:bg-white/5"
                           >
-                            {busy
-                              ? "Saving…"
-                              : isSelf
-                                ? "You"
-                                : row.is_active
-                                  ? "Deactivate"
-                                  : "Activate"}
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                            <Avatar name={row.display_name} imageUrl={row.avatar_url} />
+                            <div className="min-w-0">
+                              <p className="truncate font-semibold hover:underline">
+                                {row.display_name}
+                              </p>
+                              <p className="truncate text-xs text-ms-muted">
+                                @{row.username} · {row.email}
+                              </p>
+                            </div>
+                          </Link>
+                        </td>
+                        <td className="py-3 pr-4 text-ms-muted">{row.role}</td>
+                        <td className="py-3 pr-4">
+                          <span
+                            className={cn(
+                              "inline-flex rounded-full px-2.5 py-1 text-xs font-semibold",
+                              row.is_active
+                                ? "bg-emerald-500/15 text-emerald-400"
+                                : "bg-red-500/15 text-red-400",
+                            )}
+                          >
+                            {row.is_active ? "Active" : "Inactive"}
+                          </span>
+                        </td>
+                        <td className="py-3 pr-4 text-ms-muted">
+                          {formatListenTime(row.total_listen_seconds)}
+                        </td>
+                        <td className="py-3 text-right">
+                          <div className="flex justify-end gap-2">
+                            <Link
+                              to={`/admin/users/${row.id}`}
+                              title={`View ${row.display_name}'s profile`}
+                              aria-label={`View ${row.display_name}'s profile`}
+                              className="inline-flex size-9 items-center justify-center rounded-full border border-ms-border bg-ms-elevated text-ms-muted transition hover:border-ms-primary hover:text-ms-primary"
+                            >
+                              <UserRound size={17} aria-hidden="true" />
+                            </Link>
+                            <button
+                              type="button"
+                              title={
+                                isSelf
+                                  ? "You cannot change your own status"
+                                  : row.is_active
+                                    ? `Deactivate ${row.display_name}`
+                                    : `Activate ${row.display_name}`
+                              }
+                              aria-label={
+                                isSelf
+                                  ? "Your account"
+                                  : row.is_active
+                                    ? `Deactivate ${row.display_name}`
+                                    : `Activate ${row.display_name}`
+                              }
+                              disabled={isSelf || busy}
+                              onClick={() =>
+                                void setActive.mutateAsync({
+                                  userId: row.id,
+                                  is_active: !row.is_active,
+                                })
+                              }
+                              className={cn(
+                                "inline-flex size-9 items-center justify-center rounded-full border transition disabled:cursor-not-allowed disabled:opacity-40",
+                                row.is_active
+                                  ? "border-red-500/40 bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                                  : "border-emerald-500/40 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20",
+                              )}
+                            >
+                              {busy ? (
+                                <LoaderCircle
+                                  size={17}
+                                  className="animate-spin"
+                                  aria-hidden="true"
+                                />
+                              ) : row.is_active ? (
+                                <UserX size={17} aria-hidden="true" />
+                              ) : (
+                                <UserCheck size={17} aria-hidden="true" />
+                              )}
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
             {users.data ? (
               <p className="mt-4 text-xs text-ms-muted">
                 Showing {users.data.items.length} of {users.data.total} users

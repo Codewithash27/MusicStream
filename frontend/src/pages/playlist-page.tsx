@@ -108,7 +108,7 @@ export function PlaylistPage(): ReactElement {
               <p className="text-xs font-semibold uppercase tracking-widest text-ms-muted">
                 {data.is_public ? "Public Playlist" : "Private Playlist"}
               </p>
-              <h1 className="mt-2 font-display text-4xl font-extrabold md:text-6xl">{data.name}</h1>
+              <h1 className="mt-2 break-words font-display text-3xl font-extrabold sm:text-4xl md:text-6xl">{data.name}</h1>
               <p className="mt-3 max-w-xl text-ms-muted">
                 {data.description || "A MusicStream playlist."}
               </p>
@@ -138,11 +138,15 @@ export function PlaylistPage(): ReactElement {
             </div>
           </div>
 
-          <div className="mb-2 hidden grid-cols-[40px_1fr_1fr_80px] gap-3 px-3 text-xs uppercase tracking-wide text-ms-muted md:grid">
+          <div className="mb-2 hidden grid-cols-[16px_40px_minmax(0,1fr)_minmax(0,0.8fr)_auto_auto_72px_36px] items-center gap-1 px-2 text-xs uppercase tracking-wide text-ms-muted lg:grid">
+            <span />
             <span>#</span>
             <span>Title</span>
             <span>Album</span>
+            <span />
+            <span />
             <Clock3 size={14} className="justify-self-end" />
+            <span />
           </div>
 
           <QueryState
@@ -168,7 +172,7 @@ export function PlaylistPage(): ReactElement {
                   {isOwner ? (
                     <GripVertical
                       size={16}
-                      className="shrink-0 cursor-grab text-ms-muted opacity-0 transition group-hover/row:opacity-100"
+                      className="shrink-0 cursor-grab text-ms-muted opacity-100 transition sm:opacity-0 sm:group-hover/row:opacity-100"
                     />
                   ) : null}
                   <div className="min-w-0 flex-1">
@@ -181,7 +185,7 @@ export function PlaylistPage(): ReactElement {
                       onClick={() =>
                         void removeSong.mutateAsync({ playlistId: data.id, songId: song.id })
                       }
-                      className="shrink-0 rounded p-1.5 text-ms-muted opacity-0 transition hover:text-red-400 group-hover/row:opacity-100"
+                      className="shrink-0 rounded p-1.5 text-ms-muted opacity-100 transition hover:text-red-400 sm:opacity-0 sm:group-hover/row:opacity-100"
                       aria-label={`Remove ${song.title} from playlist`}
                       title="Remove from playlist"
                     >

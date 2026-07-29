@@ -31,7 +31,7 @@ export function VolumeControl(): ReactElement {
         value={level}
         onChange={(e) => setVolume(Number(e.target.value))}
         aria-label="Volume"
-        className="player-range hidden h-1 w-24 cursor-pointer lg:block"
+        className="player-range h-1 w-24 cursor-pointer"
         style={{
           background: `linear-gradient(to right, #fff ${pct}%, #4d4d4d ${pct}%)`,
         }}

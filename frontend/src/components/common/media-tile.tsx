@@ -53,7 +53,7 @@ export function MediaTile({
         <button
           type="button"
           aria-label={`Play ${title}`}
-          className="absolute bottom-2 right-2 flex h-11 w-11 translate-y-3 items-center justify-center rounded-full bg-ms-primary text-black opacity-0 shadow-lg transition group-hover:translate-y-0 group-hover:opacity-100"
+          className="absolute bottom-2 right-2 flex h-10 w-10 translate-y-0 items-center justify-center rounded-full bg-ms-primary text-black opacity-100 shadow-lg transition sm:h-11 sm:w-11 sm:translate-y-3 sm:opacity-0 sm:group-hover:translate-y-0 sm:group-hover:opacity-100"
           onClick={(e) => e.preventDefault()}
         >
           <Play size={18} fill="currentColor" />

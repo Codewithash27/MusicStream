@@ -50,14 +50,14 @@ export function Sidebar({ open, onClose }: SidebarProps): ReactElement {
     <>
       <div
         className={cn(
-          "fixed inset-0 z-40 bg-black/60 transition lg:hidden",
+          "fixed inset-0 z-[55] bg-black/60 transition lg:hidden",
           open ? "opacity-100" : "pointer-events-none opacity-0",
         )}
         onClick={onClose}
       />
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-black p-4 transition-transform lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-[60] flex w-[min(18rem,88vw)] flex-col bg-black p-4 pt-[max(1rem,env(safe-area-inset-top))] transition-transform lg:static lg:z-auto lg:w-64 lg:translate-x-0 lg:pt-4",
           open ? "translate-x-0" : "-translate-x-full",
         )}
       >

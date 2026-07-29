@@ -102,7 +102,7 @@ export function QueuePanel(): ReactElement {
                     <button
                       type="button"
                       onClick={() => removeFromQueue(index)}
-                      className="rounded p-2 text-ms-muted opacity-0 transition hover:text-ms-text group-hover:opacity-100"
+                      className="rounded p-2 text-ms-muted opacity-100 transition hover:text-ms-text sm:opacity-0 sm:group-hover:opacity-100"
                       aria-label="Remove from queue"
                     >
                       <Trash2 size={14} />

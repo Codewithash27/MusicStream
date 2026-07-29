@@ -11,16 +11,22 @@ export function AppShell(): ReactElement {
   const hasTrack = usePlayerStore((s) => Boolean(s.current));
 
   return (
-    <div className="min-h-screen bg-ms-bg text-ms-text">
+    <div className="min-h-dvh bg-ms-bg text-ms-text">
       <SessionHydrator />
-      <div className="flex min-h-screen">
+      <div className="flex min-h-dvh">
         <Sidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
         <div className="flex min-w-0 flex-1 flex-col">
           <TopBar onMenuClick={() => setMenuOpen(true)} />
           <main
-            className={`flex-1 px-4 pt-4 md:px-6 md:pt-6 ${hasTrack ? "pb-28 md:pb-32" : "pb-8"}`}
+            className={`mx-auto w-full flex-1 px-3 pt-3 sm:px-4 sm:pt-4 md:px-6 md:pt-6 xl:px-8 ${
+              hasTrack
+                ? "pb-[calc(6.5rem+env(safe-area-inset-bottom))] lg:pb-32"
+                : "pb-[calc(2rem+env(safe-area-inset-bottom))]"
+            }`}
           >
-            <Outlet />
+            <div className="mx-auto w-full max-w-7xl 2xl:max-w-[1600px]">
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>

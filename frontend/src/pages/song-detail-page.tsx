@@ -112,7 +112,7 @@ export function SongDetailPage(): ReactElement {
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold uppercase tracking-widest text-ms-muted">Song</p>
-              <h1 className="mt-2 font-display text-4xl font-extrabold md:text-5xl">{song.title}</h1>
+              <h1 className="mt-2 break-words font-display text-3xl font-extrabold sm:text-4xl md:text-5xl">{song.title}</h1>
               <p className="mt-3 text-ms-muted">
                 {song.artist ? (
                   <Link to={`/artist/${song.artist.id}`} className="hover:underline">

@@ -29,6 +29,7 @@ body,
 #root {
   margin: 0;
   min-height: 100%;
+  min-height: 100dvh;
 }
 
 body {
@@ -36,6 +37,12 @@ body {
   background: var(--color-ms-bg);
   color: var(--color-ms-text);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Keep fixed chrome clear of Android/iOS system bars. */
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 h1,
@@ -74,11 +81,23 @@ select {
 
 /* Song lists stay compact and reveal their scrollbar only during interaction. */
 .song-scroll-list {
-  max-height: 22rem;
+  max-height: min(22rem, 55dvh);
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-color: transparent transparent;
   scrollbar-width: thin;
+}
+
+@media (min-width: 768px) {
+  .song-scroll-list {
+    max-height: min(28rem, 60dvh);
+  }
+}
+
+@media (min-width: 1280px) {
+  .song-scroll-list {
+    max-height: min(34rem, 65dvh);
+  }
 }
 
 .song-scroll-list:hover,

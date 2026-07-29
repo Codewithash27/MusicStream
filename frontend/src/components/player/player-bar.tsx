@@ -36,9 +36,9 @@ export function PlayerBar(): ReactElement | null {
   if (!current) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#181818]/95 backdrop-blur">
-      {/* Mobile mini player */}
-      <div className="md:hidden">
+    <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-[#181818]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+      {/* Phone / tablet mini player — full desktop bar starts at lg with the sidebar */}
+      <div className="lg:hidden">
         <SeekBar
           className="px-0"
           currentTime={currentTime}
@@ -54,7 +54,7 @@ export function PlayerBar(): ReactElement | null {
             aria-label="Open now playing card"
           >
             <div
-              className="h-12 w-12 shrink-0 overflow-hidden rounded"
+              className="h-11 w-11 shrink-0 overflow-hidden rounded sm:h-12 sm:w-12"
               style={{ background: current.cover }}
             />
             <div className="min-w-0">
@@ -85,8 +85,8 @@ export function PlayerBar(): ReactElement | null {
         </div>
       </div>
 
-      {/* Desktop full bar */}
-      <div className="mx-auto hidden h-[90px] max-w-[1800px] grid-cols-[1fr_2fr_1fr] items-center gap-4 px-4 md:grid">
+      {/* Desktop full bar (aligned with permanent sidebar at lg) */}
+      <div className="mx-auto hidden h-[90px] max-w-[1800px] grid-cols-[1fr_2fr_1fr] items-center gap-4 px-4 lg:grid">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
@@ -107,7 +107,7 @@ export function PlayerBar(): ReactElement | null {
           <LikeButton songId={current.id} className="ml-1" />
         </div>
 
-        <div className="flex flex-col items-center gap-1.5">
+        <div className="flex min-w-0 flex-col items-center gap-1.5">
           <div className="flex items-center gap-4">
             <button
               type="button"
@@ -162,7 +162,7 @@ export function PlayerBar(): ReactElement | null {
               {repeat === "one" ? <Repeat1 size={16} /> : <Repeat size={16} />}
             </button>
           </div>
-          <SeekBar currentTime={currentTime} duration={duration} onSeek={seek} className="max-w-xl" />
+          <SeekBar currentTime={currentTime} duration={duration} onSeek={seek} className="w-full max-w-xl" />
         </div>
 
         <div className="flex items-center justify-end gap-3">

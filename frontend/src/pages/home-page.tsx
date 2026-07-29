@@ -32,23 +32,25 @@ export function HomePage(): ReactElement {
   const error = songs.isError || albums.isError || playlists.isError;
 
   return (
-    <div className="space-y-10">
-      <section className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#1db95433] via-ms-surface to-ms-bg p-6 md:p-10">
-        <p className="text-sm font-semibold uppercase tracking-[0.2em] text-ms-primary">
+    <div className="space-y-8 md:space-y-10">
+      <section className="overflow-hidden rounded-2xl bg-gradient-to-br from-[#1db95433] via-ms-surface to-ms-bg p-4 sm:p-6 md:p-10">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ms-primary sm:text-sm">
           Good evening
         </p>
-        <h1 className="mt-2 font-display text-3xl font-bold md:text-5xl">
+        <h1 className="mt-2 font-display text-2xl font-bold sm:text-3xl md:text-5xl">
           Pick up where you left off
         </h1>
-        <p className="mt-3 max-w-lg text-ms-muted">
+        <p className="mt-3 max-w-lg text-sm text-ms-muted sm:text-base">
           Fresh drops, liked tracks, and artists you love — ready when you are.
         </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link to="/library">
-            <Button>Open library</Button>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+          <Link to="/library" className="w-full sm:w-auto">
+            <Button className="w-full sm:w-auto">Open library</Button>
           </Link>
-          <Link to="/search">
-            <Button variant="secondary">Browse all</Button>
+          <Link to="/search" className="w-full sm:w-auto">
+            <Button variant="secondary" className="w-full sm:w-auto">
+              Browse all
+            </Button>
           </Link>
         </div>
       </section>
@@ -139,7 +141,7 @@ export function HomePage(): ReactElement {
                 : "Log in to create and save playlists."
             }
           >
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
               {playlists.data?.items.map((p) => (
                 <MediaTile
                   key={p.id}
@@ -162,7 +164,7 @@ export function HomePage(): ReactElement {
             emptyTitle="No albums yet"
             emptyDescription="Albums appear here once artists publish them."
           >
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
               {albums.data?.items.map((a) => (
                 <MediaTile
                   key={a.id}

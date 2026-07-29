@@ -64,7 +64,7 @@ export function RegisterPage(): ReactElement {
             "radial-gradient(circle at 80% 10%, rgba(29,185,84,0.22), transparent 45%), #121212",
         }}
       />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-ms-border bg-ms-surface p-8 shadow-2xl shadow-black/40">
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-ms-border bg-ms-surface p-6 shadow-2xl shadow-black/40 sm:p-8">
         <h1 className="font-display text-3xl font-bold">Join MusicStream</h1>
         <p className="mt-2 text-sm text-ms-muted">Create your account in under a minute.</p>
 

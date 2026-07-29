@@ -82,7 +82,7 @@ export function SongRow({
   return (
     <div
       className={cn(
-        "group relative grid w-full grid-cols-[auto_1fr_auto] items-center gap-3 rounded-lg px-3 py-2 transition hover:bg-white/5 md:grid-cols-[40px_1fr_1fr_auto_auto_80px]",
+        "group relative grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 rounded-lg px-2 py-2 transition hover:bg-white/5 sm:gap-3 sm:px-3 md:grid-cols-[40px_minmax(0,1fr)_auto_auto_72px] lg:grid-cols-[40px_minmax(0,1fr)_minmax(0,0.8fr)_auto_auto_72px]",
         active && "bg-white/5 text-ms-primary",
       )}
     >
@@ -144,62 +144,68 @@ export function SongRow({
       </div>
 
       {showAlbum ? (
-        <p className="hidden truncate text-sm text-ms-muted md:block">{albumLabel || "—"}</p>
+        <p className="hidden truncate text-sm text-ms-muted lg:block">{albumLabel || "—"}</p>
       ) : (
-        <span className="hidden md:block" />
+        <span className="hidden lg:block" />
       )}
 
-      <div className="relative hidden items-center gap-1 md:flex">
-        {apiSong ? <LikeButton songId={apiSong.id} /> : null}
-        {apiSong ? (
-          <button
-            type="button"
-            onClick={() => setMenuOpen((o) => !o)}
-            className="rounded p-1.5 text-ms-muted opacity-0 transition hover:text-ms-text group-hover:opacity-100"
-            aria-label="Add to playlist"
-            title="Add to playlist"
-          >
-            <ListPlus size={16} />
-          </button>
-        ) : null}
-        {menuOpen && apiSong ? (
-          <div className="absolute right-0 z-20 mt-1 w-48 rounded-xl border border-ms-border bg-ms-elevated p-2 shadow-xl">
-            <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-ms-muted">
-              Your playlists
-            </p>
-            {playlists.data?.items.length ? (
-              playlists.data.items.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  disabled={addToPlaylist.isPending}
-                  onClick={() => void onAddToPlaylist(p.id)}
-                  className="block w-full truncate rounded-lg px-2 py-1.5 text-left text-sm hover:bg-white/10"
-                >
-                  {p.name}
-                </button>
-              ))
-            ) : (
-              <p className="px-2 py-1 text-xs text-ms-muted">Create a playlist in Library first.</p>
-            )}
-            {playlistMsg ? (
-              <p className="mt-1 px-2 text-[11px] text-ms-primary">{playlistMsg}</p>
-            ) : null}
-          </div>
-        ) : null}
+      <div className="flex items-center gap-1 md:contents">
+        <div className="relative flex items-center gap-1 md:hidden">
+          {apiSong ? <LikeButton songId={apiSong.id} /> : null}
+        </div>
+
+        <div className="relative hidden items-center gap-1 md:flex">
+          {apiSong ? <LikeButton songId={apiSong.id} /> : null}
+          {apiSong ? (
+            <button
+              type="button"
+              onClick={() => setMenuOpen((o) => !o)}
+              className="rounded p-1.5 text-ms-muted opacity-100 transition hover:text-ms-text lg:opacity-0 lg:group-hover:opacity-100"
+              aria-label="Add to playlist"
+              title="Add to playlist"
+            >
+              <ListPlus size={16} />
+            </button>
+          ) : null}
+          {menuOpen && apiSong ? (
+            <div className="absolute right-0 z-20 mt-1 w-48 rounded-xl border border-ms-border bg-ms-elevated p-2 shadow-xl">
+              <p className="px-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-ms-muted">
+                Your playlists
+              </p>
+              {playlists.data?.items.length ? (
+                playlists.data.items.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    disabled={addToPlaylist.isPending}
+                    onClick={() => void onAddToPlaylist(p.id)}
+                    className="block w-full truncate rounded-lg px-2 py-1.5 text-left text-sm hover:bg-white/10"
+                  >
+                    {p.name}
+                  </button>
+                ))
+              ) : (
+                <p className="px-2 py-1 text-xs text-ms-muted">Create a playlist in Library first.</p>
+              )}
+              {playlistMsg ? (
+                <p className="mt-1 px-2 text-[11px] text-ms-primary">{playlistMsg}</p>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+
+        <button
+          type="button"
+          onClick={() => addToQueue(track)}
+          className="hidden rounded p-1.5 text-ms-muted opacity-100 transition hover:text-ms-text md:inline-flex lg:opacity-0 lg:group-hover:opacity-100"
+          aria-label="Add to queue"
+          title="Add to queue"
+        >
+          <Plus size={16} />
+        </button>
+
+        <span className="text-xs text-ms-muted tabular-nums sm:text-sm">{track.duration}</span>
       </div>
-
-      <button
-        type="button"
-        onClick={() => addToQueue(track)}
-        className="hidden rounded p-1.5 text-ms-muted opacity-0 transition hover:text-ms-text group-hover:opacity-100 md:inline-flex"
-        aria-label="Add to queue"
-        title="Add to queue"
-      >
-        <Plus size={16} />
-      </button>
-
-      <span className="text-sm text-ms-muted tabular-nums">{track.duration}</span>
     </div>
   );
 }

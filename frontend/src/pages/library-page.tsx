@@ -93,7 +93,7 @@ export function LibraryPage(): ReactElement {
             : "Log in to create and save playlists."
         }
       >
-        <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {playlists.data?.items.map((p) => (
             <MediaTile
               key={p.id}
@@ -118,7 +118,7 @@ export function LibraryPage(): ReactElement {
         emptyTitle="No albums"
         emptyDescription="Albums will show up as artists release them."
       >
-        <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <div className="mb-10 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {albums.data?.items.map((a) => (
             <MediaTile
               key={a.id}

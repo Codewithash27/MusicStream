@@ -48,7 +48,7 @@ export function LoginPage(): ReactElement {
             "radial-gradient(circle at 20% 20%, rgba(29,185,84,0.2), transparent 40%), #121212",
         }}
       />
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-ms-border bg-ms-surface p-8 shadow-2xl shadow-black/40">
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-ms-border bg-ms-surface p-6 shadow-2xl shadow-black/40 sm:p-8">
         <h1 className="font-display text-3xl font-bold">Welcome back</h1>
         <p className="mt-2 text-sm text-ms-muted">Log in to continue listening.</p>
 

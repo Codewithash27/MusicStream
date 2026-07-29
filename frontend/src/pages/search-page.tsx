@@ -57,13 +57,13 @@ export function SearchPage(): ReactElement {
       {!isSearching ? (
         <>
           <h2 className="mb-4 font-display text-xl font-bold">Browse all</h2>
-          <div className="mb-10 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div className="mb-10 grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 md:grid-cols-3 xl:grid-cols-6">
             {SEARCH_CATEGORIES.map((cat) => (
               <button
                 key={cat.title}
                 type="button"
                 onClick={() => setQ(cat.title)}
-                className="relative h-28 overflow-hidden rounded-xl p-4 text-left font-display text-lg font-bold"
+                className="relative h-24 overflow-hidden rounded-xl p-3 text-left font-display text-base font-bold sm:h-28 sm:p-4 sm:text-lg"
                 style={{ background: cat.tone }}
               >
                 {cat.title}
@@ -141,7 +141,7 @@ export function SearchPage(): ReactElement {
           {albums.data?.items.length ? (
             <section className="mb-10">
               <h2 className="mb-3 font-display text-xl font-bold">Albums</h2>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                 {albums.data.items.map((a) => (
                   <MediaTile
                     key={a.id}
@@ -158,7 +158,7 @@ export function SearchPage(): ReactElement {
           {playlists.data?.items.length ? (
             <section>
               <h2 className="mb-3 font-display text-xl font-bold">Your playlists</h2>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
                 {playlists.data.items.map((p) => (
                   <MediaTile
                     key={p.id}
