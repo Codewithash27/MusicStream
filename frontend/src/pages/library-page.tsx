@@ -105,6 +105,8 @@ export function LibraryPage(): ReactElement {
               title={p.name}
               subtitle={`${p.song_count} songs · ${p.owner?.display_name ?? "You"}`}
               cover={albumCoverStyle(p.cover_url, p.id)}
+              playlistCoverUrls={p.cover_url ? undefined : p.preview_cover_urls}
+              playlistCoverSeed={p.id}
             />
           ))}
         </div>

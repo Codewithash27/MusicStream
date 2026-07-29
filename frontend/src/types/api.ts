@@ -101,6 +101,7 @@ export interface Playlist {
   created_at: string;
   updated_at: string;
   song_count: number;
+  preview_cover_urls: Array<string | null>;
   owner: PlaylistOwner | null;
 }
 

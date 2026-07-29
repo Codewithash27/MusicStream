@@ -3,6 +3,7 @@ import type { ReactElement } from "react";
 import { useParams } from "react-router-dom";
 
 import { Button } from "../components/common/button";
+import { PlaylistCover } from "../components/common/playlist-cover";
 import { QueryState } from "../components/common/query-state";
 import { SongRow } from "../components/common/song-row";
 import { getApiErrorMessage } from "../features/auth/hooks";
@@ -18,6 +19,7 @@ export function PlaylistPage(): ReactElement {
 
   const data = playlist.data;
   const tracks = data?.songs.map(songToTrack) ?? [];
+  const headerCover = data?.cover_url ?? data?.preview_cover_urls.find(Boolean);
 
   return (
     <QueryState
@@ -31,12 +33,14 @@ export function PlaylistPage(): ReactElement {
           <div
             className="mb-6 overflow-hidden rounded-2xl p-6 md:flex md:items-end md:gap-6 md:p-8"
             style={{
-              background: `linear-gradient(180deg, rgba(0,0,0,0.35), #121212), ${albumCoverStyle(data.cover_url, data.id)}`,
+              background: `linear-gradient(180deg, rgba(0,0,0,0.35), #121212), ${albumCoverStyle(headerCover, data.id)}`,
             }}
           >
-            <div
+            <PlaylistCover
+              coverUrl={data.cover_url}
+              songCoverUrls={data.preview_cover_urls}
+              seed={data.id}
               className="mb-4 aspect-square w-40 shrink-0 rounded-lg shadow-2xl shadow-black/50 md:mb-0 md:w-52"
-              style={{ background: albumCoverStyle(data.cover_url, data.id) }}
             />
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-ms-muted">

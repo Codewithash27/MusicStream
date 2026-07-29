@@ -139,6 +139,10 @@ class PlaylistService:
             created_at=playlist.created_at,
             updated_at=playlist.updated_at,
             song_count=len(playlist.playlist_songs) if playlist.playlist_songs is not None else 0,
+            preview_cover_urls=[
+                entry.song.cover_url if entry.song is not None else None
+                for entry in playlist.playlist_songs[:4]
+            ],
             owner=PlaylistOwnerBrief.model_validate(playlist.owner)
             if playlist.owner
             else None,

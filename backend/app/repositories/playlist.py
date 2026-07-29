@@ -56,7 +56,7 @@ class PlaylistRepository:
             select(Playlist)
             .options(
                 selectinload(Playlist.owner),
-                selectinload(Playlist.playlist_songs),
+                selectinload(Playlist.playlist_songs).selectinload(PlaylistSong.song),
             )
             .order_by(Playlist.created_at.desc())
             .offset(skip)

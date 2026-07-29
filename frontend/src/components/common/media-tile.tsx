@@ -3,12 +3,15 @@ import type { ReactElement } from "react";
 import { Link } from "react-router-dom";
 
 import { cn } from "../../utils/cn";
+import { PlaylistCover } from "./playlist-cover";
 
 interface MediaTileProps {
   to: string;
   title: string;
   subtitle: string;
   cover: string;
+  playlistCoverUrls?: Array<string | null>;
+  playlistCoverSeed?: string;
   rounded?: "xl" | "full";
   className?: string;
 }
@@ -18,6 +21,8 @@ export function MediaTile({
   title,
   subtitle,
   cover,
+  playlistCoverUrls,
+  playlistCoverSeed,
   rounded = "xl",
   className,
 }: MediaTileProps): ReactElement {
@@ -30,13 +35,21 @@ export function MediaTile({
       )}
     >
       <div className="relative mb-3 aspect-square overflow-hidden shadow-lg shadow-black/40">
-        <div
-          className={cn(
-            "h-full w-full",
-            rounded === "full" ? "rounded-full" : "rounded-lg",
-          )}
-          style={{ background: cover }}
-        />
+        {playlistCoverUrls && playlistCoverSeed ? (
+          <PlaylistCover
+            songCoverUrls={playlistCoverUrls}
+            seed={playlistCoverSeed}
+            className="h-full w-full rounded-lg"
+          />
+        ) : (
+          <div
+            className={cn(
+              "h-full w-full",
+              rounded === "full" ? "rounded-full" : "rounded-lg",
+            )}
+            style={{ background: cover }}
+          />
+        )}
         <button
           type="button"
           aria-label={`Play ${title}`}

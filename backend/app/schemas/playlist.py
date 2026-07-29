@@ -48,6 +48,7 @@ class PlaylistResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     song_count: int = 0
+    preview_cover_urls: list[str | None] = Field(default_factory=list)
     owner: PlaylistOwnerBrief | None = None
 
 
