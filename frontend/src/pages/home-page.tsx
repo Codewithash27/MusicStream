@@ -14,12 +14,17 @@ import {
 } from "../features/library/hooks";
 import { usePlaylistsQuery } from "../features/playlists/hooks";
 import { useSongsQuery } from "../features/songs/hooks";
+import { useAuthStore } from "../store/auth.store";
 import { albumCoverStyle } from "../utils/mappers";
 
 export function HomePage(): ReactElement {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const songs = useSongsQuery({ limit: 8 });
   const albums = useAlbumsQuery({ limit: 8 });
-  const playlists = usePlaylistsQuery({ limit: 8 });
+  const playlists = usePlaylistsQuery(
+    { mine: true, limit: 8 },
+    { enabled: isAuthenticated },
+  );
   const recent = useRecentlyPlayedQuery({ limit: 8 });
   const liked = useLikedSongsQuery({ limit: 8 });
 
@@ -124,11 +129,15 @@ export function HomePage(): ReactElement {
         </section>
 
         <section>
-          <SectionHeader title="Playlists" actionLabel="Show all" actionTo="/library" />
+          <SectionHeader title="Your playlists" actionLabel="Show all" actionTo="/library" />
           <QueryState
             isEmpty={!playlists.data?.items.length}
             emptyTitle="No playlists yet"
-            emptyDescription="Create a playlist from your library to see it here."
+            emptyDescription={
+              isAuthenticated
+                ? "Create a playlist from your library to see it here."
+                : "Log in to create and save playlists."
+            }
           >
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {playlists.data?.items.map((p) => (

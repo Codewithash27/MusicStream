@@ -14,7 +14,7 @@ class PlaylistCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=200)
     description: str | None = Field(default=None, max_length=2000)
     cover_url: str | None = None
-    is_public: bool = True
+    is_public: bool = False
 
 
 class PlaylistUpdate(BaseModel):

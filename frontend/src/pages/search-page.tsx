@@ -10,10 +10,12 @@ import { getApiErrorMessage } from "../features/auth/hooks";
 import { useAlbumsQuery } from "../features/albums/hooks";
 import { usePlaylistsQuery } from "../features/playlists/hooks";
 import { useSongsQuery } from "../features/songs/hooks";
+import { useAuthStore } from "../store/auth.store";
 import { albumCoverStyle } from "../utils/mappers";
 import { SEARCH_CATEGORIES } from "../utils/search-categories";
 
 export function SearchPage(): ReactElement {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const [q, setQ] = useState("");
   const deferredQ = useDeferredValue(q.trim());
   const isSearching = deferredQ.length > 0;
@@ -28,8 +30,8 @@ export function SearchPage(): ReactElement {
     { enabled: isSearching },
   );
   const playlists = usePlaylistsQuery(
-    { q: deferredQ || undefined, limit: 24 },
-    { enabled: isSearching },
+    { mine: true, q: deferredQ || undefined, limit: 24 },
+    { enabled: isSearching && isAuthenticated },
   );
 
   const songList = isSearching ? songs : allSongs;
@@ -155,7 +157,7 @@ export function SearchPage(): ReactElement {
 
           {playlists.data?.items.length ? (
             <section>
-              <h2 className="mb-3 font-display text-xl font-bold">Playlists</h2>
+              <h2 className="mb-3 font-display text-xl font-bold">Your playlists</h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                 {playlists.data.items.map((p) => (
                   <MediaTile

@@ -27,16 +27,12 @@ export function LibraryPage(): ReactElement {
     { mine: true, limit: 50 },
     { enabled: isAuthenticated },
   );
-  const publicPlaylists = usePlaylistsQuery(
-    { limit: 20 },
-    { enabled: !isAuthenticated },
-  );
   const albums = useAlbumsQuery({ limit: 20 });
   const songs = useSongsQuery({ limit: 100 });
   const liked = useLikedSongsQuery({ limit: 50 }, { enabled: isAuthenticated });
   const createPlaylist = useCreatePlaylistMutation();
 
-  const playlists = isAuthenticated ? myPlaylists : publicPlaylists;
+  const playlists = myPlaylists;
 
   return (
     <div>
@@ -59,7 +55,7 @@ export function LibraryPage(): ReactElement {
           onSubmit={async (e) => {
             e.preventDefault();
             if (!name.trim()) return;
-            await createPlaylist.mutateAsync({ name: name.trim(), is_public: true });
+            await createPlaylist.mutateAsync({ name: name.trim(), is_public: false });
             setName("");
             setShowCreate(false);
             void myPlaylists.refetch();
@@ -83,7 +79,7 @@ export function LibraryPage(): ReactElement {
         </p>
       ) : null}
 
-      <h2 className="mb-3 font-display text-lg font-bold">Playlists</h2>
+      <h2 className="mb-3 font-display text-lg font-bold">Your playlists</h2>
       <QueryState
         isLoading={playlists.isLoading}
         isError={playlists.isError}
@@ -103,7 +99,7 @@ export function LibraryPage(): ReactElement {
               key={p.id}
               to={`/playlist/${p.id}`}
               title={p.name}
-              subtitle={`${p.song_count} songs · ${p.owner?.display_name ?? "You"}`}
+              subtitle={`${p.song_count} songs`}
               cover={albumCoverStyle(p.cover_url, p.id)}
               playlistCoverUrls={p.cover_url ? undefined : p.preview_cover_urls}
               playlistCoverSeed={p.id}

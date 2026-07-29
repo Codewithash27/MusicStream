@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import uuid
 
-from sqlalchemy import func, or_, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -38,15 +38,12 @@ class PlaylistRepository:
         mine_only: bool = False,
         q: str | None = None,
     ) -> tuple[list[Playlist], int]:
-        filters = []
-        if mine_only and user_id is not None:
-            filters.append(Playlist.user_id == user_id)
-        elif user_id is not None:
-            filters.append(
-                or_(Playlist.is_public.is_(True), Playlist.user_id == user_id)
-            )
-        else:
-            filters.append(Playlist.is_public.is_(True))
+        # Playlists are private to their owner: an anonymous caller sees nothing
+        # and a signed-in caller only ever sees their own.
+        if user_id is None:
+            return [], 0
+
+        filters = [Playlist.user_id == user_id]
 
         if q:
             filters.append(Playlist.name.ilike(f"%{q}%"))

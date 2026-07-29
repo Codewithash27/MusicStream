@@ -32,8 +32,8 @@ class Playlist(BaseModel):
     cover_url: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     is_public: Mapped[bool] = mapped_column(
         Boolean,
-        default=True,
-        server_default="true",
+        default=False,
+        server_default="false",
         nullable=False,
     )
 
