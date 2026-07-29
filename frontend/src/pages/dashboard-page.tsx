@@ -1,4 +1,4 @@
-import { Disc3, Heart, Play, Users } from "lucide-react";
+import { Disc3, Heart, Play, Shield, Users } from "lucide-react";
 import { useMemo, type ReactElement } from "react";
 import { Link, Navigate } from "react-router-dom";
 
@@ -40,6 +40,23 @@ export function DashboardPage(): ReactElement {
 
   return (
     <div>
+      {user?.role === "ADMIN" ? (
+        <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-ms-border bg-ms-surface p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <Shield className="mt-0.5 shrink-0 text-ms-primary" size={20} />
+            <div>
+              <p className="font-semibold">Admin panel</p>
+              <p className="text-sm text-ms-muted">
+                View all users and activate or deactivate accounts.
+              </p>
+            </div>
+          </div>
+          <Link to="/admin">
+            <Button size="sm">Manage users</Button>
+          </Link>
+        </div>
+      ) : null}
+
       <PageHeader
         title="Artist dashboard"
         subtitle="Performance for your uploaded catalog."
