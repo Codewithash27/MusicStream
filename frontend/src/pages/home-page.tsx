@@ -8,6 +8,10 @@ import { SectionHeader } from "../components/common/section-header";
 import { SongRow } from "../components/common/song-row";
 import { getApiErrorMessage } from "../features/auth/hooks";
 import { useAlbumsQuery } from "../features/albums/hooks";
+import {
+  useLikedSongsQuery,
+  useRecentlyPlayedQuery,
+} from "../features/library/hooks";
 import { usePlaylistsQuery } from "../features/playlists/hooks";
 import { useSongsQuery } from "../features/songs/hooks";
 import { albumCoverStyle } from "../utils/mappers";
@@ -16,6 +20,8 @@ export function HomePage(): ReactElement {
   const songs = useSongsQuery({ limit: 8 });
   const albums = useAlbumsQuery({ limit: 8 });
   const playlists = usePlaylistsQuery({ limit: 8 });
+  const recent = useRecentlyPlayedQuery({ limit: 8 });
+  const liked = useLikedSongsQuery({ limit: 8 });
 
   const loading = songs.isLoading || albums.isLoading || playlists.isLoading;
   const error = songs.isError || albums.isError || playlists.isError;
@@ -30,7 +36,7 @@ export function HomePage(): ReactElement {
           Pick up where you left off
         </h1>
         <p className="mt-3 max-w-lg text-ms-muted">
-          Fresh drops, curated mixes, and artists you love — ready when you are.
+          Fresh drops, liked tracks, and artists you love — ready when you are.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link to="/library">
@@ -56,6 +62,68 @@ export function HomePage(): ReactElement {
         }}
       >
         <section>
+          <SectionHeader title="Recently played" actionLabel="Library" actionTo="/library" />
+          <QueryState
+            isLoading={recent.isLoading}
+            isEmpty={!recent.isLoading && !recent.data?.items.length}
+            emptyTitle="Nothing played yet"
+            emptyDescription="Play a song and it will show up here."
+          >
+            <div className="rounded-xl bg-ms-surface/50 p-2">
+              {recent.data?.items.map((song, i) => (
+                <SongRow
+                  key={song.id}
+                  song={song}
+                  index={i + 1}
+                  queue={recent.data?.items}
+                />
+              ))}
+            </div>
+          </QueryState>
+        </section>
+
+        <section>
+          <SectionHeader title="Recently uploaded" actionLabel="Show all" actionTo="/search" />
+          <QueryState
+            isEmpty={!songs.data?.items.length}
+            emptyTitle="No songs yet"
+            emptyDescription="Upload tracks as an artist to populate the catalogue."
+          >
+            <div className="rounded-xl bg-ms-surface/50 p-2">
+              {songs.data?.items.map((song, i) => (
+                <SongRow
+                  key={song.id}
+                  song={song}
+                  index={i + 1}
+                  queue={songs.data?.items}
+                />
+              ))}
+            </div>
+          </QueryState>
+        </section>
+
+        <section>
+          <SectionHeader title="Liked songs" actionLabel="Library" actionTo="/library" />
+          <QueryState
+            isLoading={liked.isLoading}
+            isEmpty={!liked.isLoading && !liked.data?.items.length}
+            emptyTitle="No liked songs"
+            emptyDescription="Tap the heart on any track to save it here."
+          >
+            <div className="rounded-xl bg-ms-surface/50 p-2">
+              {liked.data?.items.map((song, i) => (
+                <SongRow
+                  key={song.id}
+                  song={song}
+                  index={i + 1}
+                  queue={liked.data?.items}
+                />
+              ))}
+            </div>
+          </QueryState>
+        </section>
+
+        <section>
           <SectionHeader title="Playlists" actionLabel="Show all" actionTo="/library" />
           <QueryState
             isEmpty={!playlists.data?.items.length}
@@ -70,26 +138,6 @@ export function HomePage(): ReactElement {
                   title={p.name}
                   subtitle={p.description || `${p.song_count} songs`}
                   cover={albumCoverStyle(p.cover_url, p.id)}
-                />
-              ))}
-            </div>
-          </QueryState>
-        </section>
-
-        <section>
-          <SectionHeader title="Trending songs" actionLabel="Show all" actionTo="/search" />
-          <QueryState
-            isEmpty={!songs.data?.items.length}
-            emptyTitle="No songs yet"
-            emptyDescription="Upload tracks as an artist to populate the catalogue."
-          >
-            <div className="rounded-xl bg-ms-surface/50 p-2">
-              {songs.data?.items.map((song, i) => (
-                <SongRow
-                  key={song.id}
-                  song={song}
-                  index={i + 1}
-                  queue={songs.data?.items}
                 />
               ))}
             </div>

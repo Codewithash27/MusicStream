@@ -8,6 +8,7 @@ import { useAddSongToPlaylistMutation, usePlaylistsQuery } from "../../features/
 import { cn } from "../../utils/cn";
 import { songToTrack, type PlayerTrack } from "../../utils/mappers";
 import { usePlayerStore } from "../../store/player.store";
+import { LikeButton } from "./like-button";
 
 interface SongRowProps {
   song: Song | PlayerTrack;
@@ -148,7 +149,8 @@ export function SongRow({
         <span className="hidden md:block" />
       )}
 
-      <div className="relative hidden md:block">
+      <div className="relative hidden items-center gap-1 md:flex">
+        {apiSong ? <LikeButton songId={apiSong.id} /> : null}
         {apiSong ? (
           <button
             type="button"

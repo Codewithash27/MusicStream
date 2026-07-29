@@ -1,5 +1,4 @@
 import {
-  Heart,
   ListMusic,
   Pause,
   Play,
@@ -17,6 +16,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { cn } from "../../utils/cn";
 import { formatTime } from "../../utils/time";
 import { usePlayerStore } from "../../store/player.store";
+import { LikeButton } from "../common/like-button";
 
 function progressPct(currentTime: number, duration: number): number {
   if (duration <= 0) return 0;
@@ -160,13 +160,7 @@ export function NowPlayingCard(): ReactElement | null {
                   </h2>
                   <p className="mt-1 truncate text-sm text-ms-muted">{current.artist}</p>
                 </div>
-                <button
-                  type="button"
-                  className="mt-1 shrink-0 rounded-full p-2 text-ms-muted transition hover:text-ms-primary"
-                  aria-label="Like"
-                >
-                  <Heart size={20} />
-                </button>
+                <LikeButton songId={current.id} size={20} className="mt-1 shrink-0 rounded-full p-2" />
               </div>
 
               <div>

@@ -6,20 +6,39 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
-from app.dependencies.auth import ArtistUser
+from app.dependencies.auth import ArtistUser, get_current_user
+from app.models.user import User
 from app.schemas.song import SongListResponse, SongResponse, SongUpdate
+from app.services.play_history import PlayHistoryService
 from app.services.song import SongService
 
 router = APIRouter(prefix="/songs", tags=["Songs"])
+optional_bearer = HTTPBearer(auto_error=False)
 
 
 def get_song_service(
     session: Annotated[AsyncSession, Depends(get_db)],
 ) -> SongService:
     return SongService(session)
+
+
+async def get_optional_user(
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Depends(optional_bearer),
+    ],
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> User | None:
+    if credentials is None:
+        return None
+    try:
+        return await get_current_user(credentials, session)
+    except Exception:
+        return None
 
 
 @router.post(
@@ -245,12 +264,21 @@ async def upload_song_cover(
     "/{song_id}/play",
     response_model=SongResponse,
     summary="Increment play count",
-    description="Atomically increment the song play counter.",
+    description=(
+        "Atomically increment the song play counter. "
+        "When authenticated, also records the track in the user's recently played list."
+    ),
     openapi_extra={"security": []},
     responses={404: {"description": "Song not found"}},
 )
 async def play_song(
     song_id: uuid.UUID,
     service: Annotated[SongService, Depends(get_song_service)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+    user: Annotated[User | None, Depends(get_optional_user)],
 ) -> SongResponse:
-    return await service.increment_play(song_id)
+    song = await service.increment_play(song_id)
+    if user is not None:
+        await PlayHistoryService(session).record(user_id=user.id, song_id=song_id)
+        await session.commit()
+    return song

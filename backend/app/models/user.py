@@ -13,6 +13,7 @@ from app.models.enums import UserRole
 if TYPE_CHECKING:
     from app.models.artist import ArtistProfile
     from app.models.like import Like
+    from app.models.play_history import PlayHistory
     from app.models.playlist import Playlist
     from app.models.refresh_token import RefreshToken
 
@@ -67,6 +68,12 @@ class User(BaseModel):
     )
     likes: Mapped[list[Like]] = relationship(
         "Like",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    play_history: Mapped[list[PlayHistory]] = relationship(
+        "PlayHistory",
         back_populates="user",
         cascade="all, delete-orphan",
         passive_deletes=True,

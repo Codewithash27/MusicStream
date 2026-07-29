@@ -5,6 +5,7 @@ from app.models.artist import ArtistProfile
 from app.models.base import BaseModel
 from app.models.enums import UserRole
 from app.models.like import Like
+from app.models.play_history import PlayHistory
 from app.models.playlist import Playlist, PlaylistSong
 from app.models.refresh_token import RefreshToken
 from app.models.song import Song
@@ -15,6 +16,7 @@ __all__ = [
     "ArtistProfile",
     "BaseModel",
     "Like",
+    "PlayHistory",
     "Playlist",
     "PlaylistSong",
     "RefreshToken",

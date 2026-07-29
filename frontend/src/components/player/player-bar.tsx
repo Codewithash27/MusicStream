@@ -1,5 +1,4 @@
 import {
-  Heart,
   ListMusic,
   Pause,
   Play,
@@ -13,6 +12,7 @@ import type { ReactElement } from "react";
 
 import { cn } from "../../utils/cn";
 import { usePlayerStore } from "../../store/player.store";
+import { LikeButton } from "../common/like-button";
 import { SeekBar } from "./seek-bar";
 import { VolumeControl } from "./volume-control";
 
@@ -104,13 +104,7 @@ export function PlayerBar(): ReactElement | null {
             <p className="truncate text-sm font-semibold hover:underline">{current.title}</p>
             <p className="truncate text-xs text-ms-muted">{current.artist}</p>
           </button>
-          <button
-            type="button"
-            className="ml-1 text-ms-muted transition hover:text-ms-primary"
-            aria-label="Like"
-          >
-            <Heart size={16} />
-          </button>
+          <LikeButton songId={current.id} className="ml-1" />
         </div>
 
         <div className="flex flex-col items-center gap-1.5">

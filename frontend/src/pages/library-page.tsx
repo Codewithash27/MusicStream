@@ -9,6 +9,7 @@ import { QueryState } from "../components/common/query-state";
 import { SongRow } from "../components/common/song-row";
 import { getApiErrorMessage } from "../features/auth/hooks";
 import { useAlbumsQuery } from "../features/albums/hooks";
+import { useLikedSongsQuery } from "../features/library/hooks";
 import {
   useCreatePlaylistMutation,
   usePlaylistsQuery,
@@ -32,6 +33,7 @@ export function LibraryPage(): ReactElement {
   );
   const albums = useAlbumsQuery({ limit: 20 });
   const songs = useSongsQuery({ limit: 10 });
+  const liked = useLikedSongsQuery({ limit: 50 }, { enabled: isAuthenticated });
   const createPlaylist = useCreatePlaylistMutation();
 
   const playlists = isAuthenticated ? myPlaylists : publicPlaylists;
@@ -131,7 +133,28 @@ export function LibraryPage(): ReactElement {
         </div>
       </QueryState>
 
-      <h2 className="mb-3 font-display text-lg font-bold">Recent songs</h2>
+      <h2 className="mb-3 font-display text-lg font-bold">Liked songs</h2>
+      <QueryState
+        isLoading={liked.isLoading}
+        isError={liked.isError}
+        errorMessage={getApiErrorMessage(liked.error)}
+        onRetry={() => void liked.refetch()}
+        isEmpty={!liked.data?.items.length}
+        emptyTitle="No liked songs"
+        emptyDescription={
+          isAuthenticated
+            ? "Tap the heart on any track to save it here."
+            : "Log in to like and save songs."
+        }
+      >
+        <div className="mb-10 rounded-xl bg-ms-surface/40 p-2">
+          {liked.data?.items.map((song, i) => (
+            <SongRow key={song.id} song={song} index={i + 1} queue={liked.data?.items} />
+          ))}
+        </div>
+      </QueryState>
+
+      <h2 className="mb-3 font-display text-lg font-bold">Recently uploaded</h2>
       <QueryState
         isLoading={songs.isLoading}
         isError={songs.isError}

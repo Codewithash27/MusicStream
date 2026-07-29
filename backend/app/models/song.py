@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from app.models.album import Album
     from app.models.artist import ArtistProfile
     from app.models.like import Like
+    from app.models.play_history import PlayHistory
     from app.models.playlist import PlaylistSong
 
 
@@ -64,6 +65,12 @@ class Song(BaseModel):
     )
     likes: Mapped[list[Like]] = relationship(
         "Like",
+        back_populates="song",
+        cascade="all, delete-orphan",
+        passive_deletes=True,
+    )
+    play_history: Mapped[list[PlayHistory]] = relationship(
+        "PlayHistory",
         back_populates="song",
         cascade="all, delete-orphan",
         passive_deletes=True,

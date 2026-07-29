@@ -16,3 +16,4 @@ export {
   type PlaylistListParams,
 } from "./playlists";
 export { usersApi } from "./users";
+export { libraryApi } from "./library";
