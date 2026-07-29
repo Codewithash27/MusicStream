@@ -99,3 +99,55 @@ class PlaylistRepository:
             )
         )
         return int(result.scalar_one())
+
+    async def remove_song(
+        self,
+        *,
+        playlist_id: uuid.UUID,
+        song_id: uuid.UUID,
+    ) -> bool:
+        result = await self.session.execute(
+            select(PlaylistSong).where(
+                PlaylistSong.playlist_id == playlist_id,
+                PlaylistSong.song_id == song_id,
+            )
+        )
+        entry = result.scalar_one_or_none()
+        if entry is None:
+            return False
+        await self.session.delete(entry)
+        await self.session.flush()
+        return True
+
+    async def reorder(
+        self,
+        *,
+        playlist_id: uuid.UUID,
+        song_ids: list[uuid.UUID],
+    ) -> None:
+        """Set positions based on the order of song_ids."""
+        for position, song_id in enumerate(song_ids, start=1):
+            await self.session.execute(
+                select(PlaylistSong)
+                .where(
+                    PlaylistSong.playlist_id == playlist_id,
+                    PlaylistSong.song_id == song_id,
+                )
+            )
+        # Drop unique constraint temporarily by setting negative positions
+        result = await self.session.execute(
+            select(PlaylistSong).where(
+                PlaylistSong.playlist_id == playlist_id,
+            )
+        )
+        entries = {e.song_id: e for e in result.scalars().all()}
+        for i, sid in enumerate(song_ids):
+            entry = entries.get(sid)
+            if entry is not None:
+                entry.position = -(i + 1)
+        await self.session.flush()
+        for i, sid in enumerate(song_ids):
+            entry = entries.get(sid)
+            if entry is not None:
+                entry.position = i + 1
+        await self.session.flush()

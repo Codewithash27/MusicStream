@@ -18,6 +18,7 @@ from app.schemas.playlist import (
     PlaylistDetailResponse,
     PlaylistListResponse,
     PlaylistUpdate,
+    ReorderPlaylist,
 )
 from app.services.playlist import PlaylistService
 
@@ -117,3 +118,31 @@ async def add_song_to_playlist(
     service: Annotated[PlaylistService, Depends(get_playlist_service)],
 ) -> PlaylistDetailResponse:
     return await service.add_song(playlist_id, user, payload.song_id)
+
+
+@router.delete(
+    "/{playlist_id}/songs/{song_id}",
+    response_model=PlaylistDetailResponse,
+    summary="Remove song from playlist",
+)
+async def remove_song_from_playlist(
+    playlist_id: uuid.UUID,
+    song_id: uuid.UUID,
+    user: CurrentUser,
+    service: Annotated[PlaylistService, Depends(get_playlist_service)],
+) -> PlaylistDetailResponse:
+    return await service.remove_song(playlist_id, user, song_id)
+
+
+@router.put(
+    "/{playlist_id}/reorder",
+    response_model=PlaylistDetailResponse,
+    summary="Reorder songs in playlist",
+)
+async def reorder_playlist(
+    playlist_id: uuid.UUID,
+    payload: ReorderPlaylist,
+    user: CurrentUser,
+    service: Annotated[PlaylistService, Depends(get_playlist_service)],
+) -> PlaylistDetailResponse:
+    return await service.reorder(playlist_id, user, payload.song_ids)

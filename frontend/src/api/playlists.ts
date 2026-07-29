@@ -38,4 +38,19 @@ export const playlistsApi = {
     });
     return data;
   },
+
+  removeSong: async (playlistId: string, songId: string): Promise<PlaylistDetail> => {
+    const { data } = await api.delete<PlaylistDetail>(
+      `/playlists/${playlistId}/songs/${songId}`,
+    );
+    return data;
+  },
+
+  reorder: async (playlistId: string, songIds: string[]): Promise<PlaylistDetail> => {
+    const { data } = await api.put<PlaylistDetail>(
+      `/playlists/${playlistId}/reorder`,
+      { song_ids: songIds },
+    );
+    return data;
+  },
 };

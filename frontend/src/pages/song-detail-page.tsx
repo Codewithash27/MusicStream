@@ -1,4 +1,4 @@
-import { ImagePlus, Play } from "lucide-react";
+import { ImagePlus, Play, Trash2 } from "lucide-react";
 import {
   type ChangeEvent,
   type ReactElement,
@@ -6,12 +6,12 @@ import {
   useRef,
   useState,
 } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { getApiErrorMessage } from "../api/client";
 import { Button } from "../components/common/button";
 import { QueryState } from "../components/common/query-state";
-import { useSongQuery, useUploadSongCoverMutation } from "../features/songs/hooks";
+import { useDeleteSongMutation, useSongQuery, useUploadSongCoverMutation } from "../features/songs/hooks";
 import { useAuthStore } from "../store/auth.store";
 import { usePlayerStore } from "../store/player.store";
 import { albumCoverStyle, coverFromSeed, songToTrack } from "../utils/mappers";
@@ -30,9 +30,13 @@ export function SongDetailPage(): ReactElement {
   const [coverError, setCoverError] = useState<string | null>(null);
   const [coverOk, setCoverOk] = useState<string | null>(null);
 
+  const navigate = useNavigate();
+  const deleteSong = useDeleteSongMutation();
+
   const song = songQuery.data;
   const canEditCover =
     Boolean(user) && (user?.role === "ARTIST" || user?.role === "ADMIN");
+  const canDelete = user?.role === "ADMIN" || (user?.role === "ARTIST" && canEditCover);
 
   const onCoverChange = async (e: ChangeEvent<HTMLInputElement>) => {
     setCoverError(null);
@@ -127,6 +131,20 @@ export function SongDetailPage(): ReactElement {
                 <Link to="/home">
                   <Button variant="secondary">Back to Home</Button>
                 </Link>
+                {canDelete ? (
+                  <Button
+                    variant="danger"
+                    disabled={deleteSong.isPending}
+                    onClick={async () => {
+                      if (!window.confirm(`Delete "${song.title}"? This cannot be undone.`)) return;
+                      await deleteSong.mutateAsync(song.id);
+                      navigate("/search", { replace: true });
+                    }}
+                  >
+                    <Trash2 size={16} />
+                    {deleteSong.isPending ? "Deleting…" : "Delete song"}
+                  </Button>
+                ) : null}
               </div>
             </div>
           </div>

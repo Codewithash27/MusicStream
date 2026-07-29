@@ -50,6 +50,10 @@ export const songsApi = {
     return data;
   },
 
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/songs/${id}`);
+  },
+
   /** POST /songs/{id}/cover */
   uploadCover: async (songId: string, cover: File): Promise<Song> => {
     const form = new FormData();

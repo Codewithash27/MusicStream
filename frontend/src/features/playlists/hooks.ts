@@ -52,3 +52,26 @@ export function useAddSongToPlaylistMutation() {
     },
   });
 }
+
+export function useRemoveSongFromPlaylistMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ playlistId, songId }: { playlistId: string; songId: string }) =>
+      playlistsApi.removeSong(playlistId, songId),
+    onSuccess: (_data, vars) => {
+      void queryClient.invalidateQueries({ queryKey: playlistKeys.all });
+      void queryClient.invalidateQueries({ queryKey: playlistKeys.detail(vars.playlistId) });
+    },
+  });
+}
+
+export function useReorderPlaylistMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ playlistId, songIds }: { playlistId: string; songIds: string[] }) =>
+      playlistsApi.reorder(playlistId, songIds),
+    onSuccess: (_data, vars) => {
+      void queryClient.invalidateQueries({ queryKey: playlistKeys.detail(vars.playlistId) });
+    },
+  });
+}

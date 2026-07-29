@@ -119,6 +119,37 @@ class PlaylistService:
         await self.session.commit()
         return await self.get(playlist_id, user)
 
+    async def remove_song(
+        self,
+        playlist_id: uuid.UUID,
+        user: User,
+        song_id: uuid.UUID,
+    ) -> PlaylistDetailResponse:
+        playlist = await self._owned(playlist_id, user)
+        removed = await self.playlists.remove_song(
+            playlist_id=playlist.id, song_id=song_id,
+        )
+        if not removed:
+            raise NotFoundError("Song not in this playlist")
+        await self.session.commit()
+        return await self.get(playlist_id, user)
+
+    async def reorder(
+        self,
+        playlist_id: uuid.UUID,
+        user: User,
+        song_ids: list[uuid.UUID],
+    ) -> PlaylistDetailResponse:
+        playlist = await self._owned(playlist_id, user)
+        current_ids = {e.song_id for e in playlist.playlist_songs}
+        if set(song_ids) != current_ids:
+            raise BadRequestError(
+                "song_ids must contain exactly the songs currently in the playlist"
+            )
+        await self.playlists.reorder(playlist_id=playlist.id, song_ids=song_ids)
+        await self.session.commit()
+        return await self.get(playlist_id, user)
+
     async def _owned(self, playlist_id: uuid.UUID, user: User) -> Playlist:
         playlist = await self.playlists.get_by_id(playlist_id)
         if playlist is None:

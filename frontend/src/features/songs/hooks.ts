@@ -38,6 +38,16 @@ export function useUploadSongMutation() {
   });
 }
 
+export function useDeleteSongMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (songId: string) => songsApi.delete(songId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: songKeys.all });
+    },
+  });
+}
+
 export function useUploadSongCoverMutation() {
   const queryClient = useQueryClient();
 

@@ -28,6 +28,10 @@ class AddSongToPlaylist(BaseModel):
     song_id: uuid.UUID
 
 
+class ReorderPlaylist(BaseModel):
+    song_ids: list[uuid.UUID] = Field(..., min_length=1)
+
+
 class PlaylistOwnerBrief(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
