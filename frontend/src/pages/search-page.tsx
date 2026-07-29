@@ -16,15 +16,27 @@ import { SEARCH_CATEGORIES } from "../utils/search-categories";
 export function SearchPage(): ReactElement {
   const [q, setQ] = useState("");
   const deferredQ = useDeferredValue(q.trim());
-  const enabled = deferredQ.length > 0;
+  const isSearching = deferredQ.length > 0;
 
-  const songs = useSongsQuery({ q: deferredQ || undefined, limit: 20 }, { enabled });
-  const albums = useAlbumsQuery({ q: deferredQ || undefined, limit: 12 }, { enabled });
-  const playlists = usePlaylistsQuery({ q: deferredQ || undefined, limit: 12 }, { enabled });
+  const allSongs = useSongsQuery({ limit: 100 }, { enabled: !isSearching });
+  const songs = useSongsQuery(
+    { q: deferredQ || undefined, limit: 100 },
+    { enabled: isSearching },
+  );
+  const albums = useAlbumsQuery(
+    { q: deferredQ || undefined, limit: 24 },
+    { enabled: isSearching },
+  );
+  const playlists = usePlaylistsQuery(
+    { q: deferredQ || undefined, limit: 24 },
+    { enabled: isSearching },
+  );
+
+  const songList = isSearching ? songs : allSongs;
 
   return (
     <div>
-      <PageHeader title="Search" subtitle="Find songs, albums, and playlists." />
+      <PageHeader title="Search" subtitle="Browse the full catalogue or search by name." />
 
       <div className="relative mb-8">
         <Search
@@ -40,10 +52,10 @@ export function SearchPage(): ReactElement {
         />
       </div>
 
-      {!enabled ? (
+      {!isSearching ? (
         <>
           <h2 className="mb-4 font-display text-xl font-bold">Browse all</h2>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div className="mb-10 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
             {SEARCH_CATEGORIES.map((cat) => (
               <button
                 key={cat.title}
@@ -56,6 +68,33 @@ export function SearchPage(): ReactElement {
               </button>
             ))}
           </div>
+
+          <div className="mb-3 flex items-end justify-between gap-3">
+            <h2 className="font-display text-xl font-bold">All songs</h2>
+            {allSongs.data ? (
+              <p className="text-sm text-ms-muted">{allSongs.data.total} tracks</p>
+            ) : null}
+          </div>
+          <QueryState
+            isLoading={allSongs.isLoading}
+            isError={allSongs.isError}
+            errorMessage={getApiErrorMessage(allSongs.error, "Could not load songs")}
+            onRetry={() => void allSongs.refetch()}
+            isEmpty={!allSongs.data?.items.length}
+            emptyTitle="No songs yet"
+            emptyDescription="Upload tracks as an artist to populate the catalogue."
+          >
+            <div className="song-scroll-list rounded-xl bg-ms-surface/40 p-2">
+              {allSongs.data?.items.map((song, i) => (
+                <SongRow
+                  key={song.id}
+                  song={song}
+                  index={i + 1}
+                  queue={allSongs.data?.items}
+                />
+              ))}
+            </div>
+          </QueryState>
         </>
       ) : (
         <QueryState
@@ -78,12 +117,20 @@ export function SearchPage(): ReactElement {
           emptyTitle={`No results for “${deferredQ}”`}
           emptyDescription="Try another spelling or a broader keyword."
         >
-          {songs.data?.items.length ? (
+          {songList.data?.items.length ? (
             <section className="mb-10">
-              <h2 className="mb-3 font-display text-xl font-bold">Songs</h2>
-              <div className="rounded-xl bg-ms-surface/40 p-2">
-                {songs.data.items.map((song, i) => (
-                  <SongRow key={song.id} song={song} index={i + 1} queue={songs.data.items} />
+              <div className="mb-3 flex items-end justify-between gap-3">
+                <h2 className="font-display text-xl font-bold">Songs</h2>
+                <p className="text-sm text-ms-muted">{songList.data.total} matches</p>
+              </div>
+              <div className="song-scroll-list rounded-xl bg-ms-surface/40 p-2">
+                {songList.data.items.map((song, i) => (
+                  <SongRow
+                    key={song.id}
+                    song={song}
+                    index={i + 1}
+                    queue={songList.data.items}
+                  />
                 ))}
               </div>
             </section>

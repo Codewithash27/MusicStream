@@ -90,7 +90,7 @@ export function DashboardPage(): ReactElement {
           emptyTitle="No uploads yet"
           emptyDescription="Upload your first track to see stats here."
         >
-          <div>
+          <div className="song-scroll-list">
             {topTracks.map((song, i) => (
               <SongRow key={song.id} song={song} index={i + 1} showAlbum={false} queue={topTracks} />
             ))}

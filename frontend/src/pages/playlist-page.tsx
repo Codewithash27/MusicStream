@@ -84,7 +84,7 @@ export function PlaylistPage(): ReactElement {
             emptyTitle="Empty playlist"
             emptyDescription="Add songs to this playlist to start listening."
           >
-            <div className="rounded-xl bg-ms-surface/30 p-2">
+            <div className="song-scroll-list rounded-xl bg-ms-surface/30 p-2">
               {data.songs.map((song, i) => (
                 <SongRow key={song.id} song={song} index={i + 1} queue={data.songs} />
               ))}

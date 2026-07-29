@@ -32,7 +32,7 @@ export function LibraryPage(): ReactElement {
     { enabled: !isAuthenticated },
   );
   const albums = useAlbumsQuery({ limit: 20 });
-  const songs = useSongsQuery({ limit: 10 });
+  const songs = useSongsQuery({ limit: 100 });
   const liked = useLikedSongsQuery({ limit: 50 }, { enabled: isAuthenticated });
   const createPlaylist = useCreatePlaylistMutation();
 
@@ -147,14 +147,19 @@ export function LibraryPage(): ReactElement {
             : "Log in to like and save songs."
         }
       >
-        <div className="mb-10 rounded-xl bg-ms-surface/40 p-2">
+        <div className="song-scroll-list mb-10 rounded-xl bg-ms-surface/40 p-2">
           {liked.data?.items.map((song, i) => (
             <SongRow key={song.id} song={song} index={i + 1} queue={liked.data?.items} />
           ))}
         </div>
       </QueryState>
 
-      <h2 className="mb-3 font-display text-lg font-bold">Recently uploaded</h2>
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <h2 className="font-display text-lg font-bold">All songs</h2>
+        {songs.data ? (
+          <p className="text-sm text-ms-muted">{songs.data.total} tracks</p>
+        ) : null}
+      </div>
       <QueryState
         isLoading={songs.isLoading}
         isError={songs.isError}
@@ -164,7 +169,7 @@ export function LibraryPage(): ReactElement {
         emptyTitle="No songs"
         emptyDescription="The catalogue is empty."
       >
-        <div className="rounded-xl bg-ms-surface/40 p-2">
+        <div className="song-scroll-list rounded-xl bg-ms-surface/40 p-2">
           {songs.data?.items.map((song, i) => (
             <SongRow key={song.id} song={song} index={i + 1} queue={songs.data?.items} />
           ))}

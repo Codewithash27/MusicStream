@@ -82,7 +82,7 @@ export function ArtistPage(): ReactElement {
         {tracks.length ? (
           <>
             <SectionHeader title="Popular" />
-            <div className="mb-10 rounded-xl bg-ms-surface/30 p-2">
+            <div className="song-scroll-list mb-10 rounded-xl bg-ms-surface/30 p-2">
               {tracks.slice(0, 10).map((song, i) => (
                 <SongRow key={song.id} song={song} index={i + 1} queue={tracks} />
               ))}

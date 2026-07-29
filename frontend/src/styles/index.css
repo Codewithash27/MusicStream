@@ -72,6 +72,29 @@ select {
   background: transparent;
 }
 
+/* Song lists stay compact and reveal their scrollbar only during interaction. */
+.song-scroll-list {
+  max-height: 22rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: transparent transparent;
+  scrollbar-width: thin;
+}
+
+.song-scroll-list:hover,
+.song-scroll-list:focus-within {
+  scrollbar-color: #555 transparent;
+}
+
+.song-scroll-list::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.song-scroll-list:hover::-webkit-scrollbar-thumb,
+.song-scroll-list:focus-within::-webkit-scrollbar-thumb {
+  background: #555;
+}
+
 /* Spotify-like range inputs */
 .player-range {
   -webkit-appearance: none;

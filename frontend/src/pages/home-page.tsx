@@ -69,7 +69,7 @@ export function HomePage(): ReactElement {
             emptyTitle="Nothing played yet"
             emptyDescription="Play a song and it will show up here."
           >
-            <div className="rounded-xl bg-ms-surface/50 p-2">
+            <div className="song-scroll-list rounded-xl bg-ms-surface/50 p-2">
               {recent.data?.items.map((song, i) => (
                 <SongRow
                   key={song.id}
@@ -83,13 +83,13 @@ export function HomePage(): ReactElement {
         </section>
 
         <section>
-          <SectionHeader title="Recently uploaded" actionLabel="Show all" actionTo="/search" />
+          <SectionHeader title="Recently uploaded" actionLabel="All songs" actionTo="/search" />
           <QueryState
             isEmpty={!songs.data?.items.length}
             emptyTitle="No songs yet"
             emptyDescription="Upload tracks as an artist to populate the catalogue."
           >
-            <div className="rounded-xl bg-ms-surface/50 p-2">
+            <div className="song-scroll-list rounded-xl bg-ms-surface/50 p-2">
               {songs.data?.items.map((song, i) => (
                 <SongRow
                   key={song.id}
@@ -110,7 +110,7 @@ export function HomePage(): ReactElement {
             emptyTitle="No liked songs"
             emptyDescription="Tap the heart on any track to save it here."
           >
-            <div className="rounded-xl bg-ms-surface/50 p-2">
+            <div className="song-scroll-list rounded-xl bg-ms-surface/50 p-2">
               {liked.data?.items.map((song, i) => (
                 <SongRow
                   key={song.id}

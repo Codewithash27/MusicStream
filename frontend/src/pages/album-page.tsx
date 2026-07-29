@@ -69,7 +69,7 @@ export function AlbumPage(): ReactElement {
             emptyTitle="No tracks on this album"
             emptyDescription="Songs linked to this album will appear here."
           >
-            <div className="rounded-xl bg-ms-surface/30 p-2">
+            <div className="song-scroll-list rounded-xl bg-ms-surface/30 p-2">
               {data.songs.map((song, i) => (
                 <SongRow
                   key={song.id}
