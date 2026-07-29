@@ -4,6 +4,7 @@ import { ProtectedRoute } from "../components/layout/protected-route";
 import { AppShell } from "../layouts/app-shell";
 import { MarketingShell } from "../layouts/marketing-shell";
 import { AlbumPage } from "../pages/album-page";
+import { AdminPage } from "../pages/admin-page";
 import { ArtistPage } from "../pages/artist-page";
 import { DashboardPage } from "../pages/dashboard-page";
 import { HomePage } from "../pages/home-page";
@@ -43,6 +44,7 @@ export const router = createBrowserRouter([
           { path: "/song/:id", element: <SongDetailPage /> },
           { path: "/upload", element: <UploadSongPage /> },
           { path: "/dashboard", element: <DashboardPage /> },
+          { path: "/admin", element: <AdminPage /> },
           { path: "/settings", element: <SettingsPage /> },
           { path: "/profile", element: <ProfilePage /> },
         ],

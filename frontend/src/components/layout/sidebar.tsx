@@ -5,6 +5,7 @@ import {
   LogOut,
   Search,
   Settings,
+  Shield,
   Upload,
   UserRound,
 } from "lucide-react";
@@ -22,6 +23,7 @@ const links = [
   { to: "/library", label: "Library", icon: Library },
   { to: "/upload", label: "Upload", icon: Upload, roles: ["ARTIST", "ADMIN"] as const },
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["ARTIST", "ADMIN"] as const },
+  { to: "/admin", label: "Admin", icon: Shield, roles: ["ADMIN"] as const },
   { to: "/settings", label: "Settings", icon: Settings },
   { to: "/profile", label: "Profile", icon: UserRound },
 ];
