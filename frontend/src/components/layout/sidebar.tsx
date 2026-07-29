@@ -39,7 +39,11 @@ export function Sidebar({ open, onClose }: SidebarProps): ReactElement {
   const navigate = useNavigate();
 
   const visibleLinks = links.filter(
-    (link) => !link.roles || (user && link.roles.includes(user.role as "ARTIST" | "ADMIN")),
+    (link) =>
+      !link.roles ||
+      (user?.role === "ARTIST" || user?.role === "ADMIN"
+        ? (link.roles as readonly string[]).includes(user.role)
+        : false),
   );
 
   return (
