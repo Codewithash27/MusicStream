@@ -50,8 +50,9 @@ Use these accounts to try the live site (for friends / reviewers).
 
 | Role | Username | Password | Notes |
 |------|----------|----------|--------|
-| **Listener** | `Batata_Vada` | `Aman@2004` | Normal user — listen, like, playlists |
-| **Admin** | `Lucifer` | `Aman@27052004` | Admin panel, upload, manage users |
+| **Listener** |  Normal user — listen, like, playlists |
+| **Admin** |  Admin panel, upload, manage users |
+| **Artist**| upload, listen
 
 <details>
 <summary>Credential screenshots</summary>
