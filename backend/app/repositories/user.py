@@ -70,6 +70,9 @@ class UserRepository:
         *,
         q: str | None = None,
         is_active: bool | None = None,
+        has_listened: bool | None = None,
+        sort_by: str = "created_at",
+        sort_dir: str = "desc",
         skip: int = 0,
         limit: int = 50,
     ) -> tuple[list[User], int]:
@@ -85,9 +88,19 @@ class UserRepository:
             )
         if is_active is not None:
             filters.append(User.is_active.is_(is_active))
+        if has_listened is True:
+            filters.append(User.total_listen_seconds > 0)
+        elif has_listened is False:
+            filters.append(User.total_listen_seconds == 0)
 
         count_stmt = select(func.count()).select_from(User)
-        list_stmt = select(User).order_by(User.created_at.desc())
+        order_col = (
+            User.total_listen_seconds
+            if sort_by == "listen_time"
+            else User.created_at
+        )
+        order = order_col.asc() if sort_dir == "asc" else order_col.desc()
+        list_stmt = select(User).order_by(order)
         if filters:
             count_stmt = count_stmt.where(*filters)
             list_stmt = list_stmt.where(*filters)

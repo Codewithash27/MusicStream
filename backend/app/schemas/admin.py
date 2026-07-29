@@ -8,6 +8,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from app.models.enums import UserRole
+from app.schemas.song import SongResponse
 
 
 class AdminUserOut(BaseModel):
@@ -48,3 +49,14 @@ class AdminStatsResponse(BaseModel):
     total_song_plays: int = Field(
         description="Sum of song.play_count across the catalog",
     )
+
+
+class AdminMostPlayedSong(BaseModel):
+    song: SongResponse
+    play_count: int
+    listened_seconds: int = 0
+
+
+class AdminUserDetailResponse(BaseModel):
+    user: AdminUserOut
+    most_played: list[AdminMostPlayedSong] = Field(default_factory=list)

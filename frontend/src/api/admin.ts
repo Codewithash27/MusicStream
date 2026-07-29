@@ -1,5 +1,5 @@
 import { api } from "./client";
-import type { User } from "../types/api";
+import type { Song, User } from "../types/api";
 
 export interface AdminUser extends User {
   total_listen_seconds: number;
@@ -20,9 +20,23 @@ export interface AdminStats {
   total_song_plays: number;
 }
 
+export interface AdminMostPlayedSong {
+  song: Song;
+  play_count: number;
+  listened_seconds: number;
+}
+
+export interface AdminUserDetail {
+  user: AdminUser;
+  most_played: AdminMostPlayedSong[];
+}
+
 export interface AdminUserListParams {
   q?: string;
   is_active?: boolean;
+  has_listened?: boolean;
+  sort_by?: "created_at" | "listen_time";
+  sort_dir?: "asc" | "desc";
   skip?: number;
   limit?: number;
 }
@@ -35,6 +49,11 @@ export const adminApi = {
 
   listUsers: async (params: AdminUserListParams = {}): Promise<AdminUserListResponse> => {
     const { data } = await api.get<AdminUserListResponse>("/admin/users", { params });
+    return data;
+  },
+
+  getUser: async (userId: string): Promise<AdminUserDetail> => {
+    const { data } = await api.get<AdminUserDetail>(`/admin/users/${userId}`);
     return data;
   },
 

@@ -1,6 +1,6 @@
 import { Clock3, PauseCircle, PlayCircle, Users } from "lucide-react";
 import { useMemo, useState, type ReactElement } from "react";
-import { Navigate } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 
 import { formatListenTime } from "../api/admin";
 import { getApiErrorMessage } from "../api/client";
@@ -17,21 +17,27 @@ import { useAuthStore } from "../store/auth.store";
 import { cn } from "../utils/cn";
 
 type ActiveFilter = "all" | "active" | "inactive";
+type SortMode = "newest" | "listen";
 
 export function AdminPage(): ReactElement {
   const user = useAuthStore((s) => s.user);
   const [q, setQ] = useState("");
   const [draftQ, setDraftQ] = useState("");
   const [filter, setFilter] = useState<ActiveFilter>("all");
+  const [sortMode, setSortMode] = useState<SortMode>("newest");
+  const [listenersOnly, setListenersOnly] = useState(false);
 
   const listParams = useMemo(
     () => ({
       q: q || undefined,
       is_active: filter === "all" ? undefined : filter === "active",
+      has_listened: listenersOnly ? true : undefined,
+      sort_by: sortMode === "listen" ? ("listen_time" as const) : ("created_at" as const),
+      sort_dir: "desc" as const,
       limit: 50,
       skip: 0,
     }),
-    [q, filter],
+    [q, filter, sortMode, listenersOnly],
   );
 
   const isAdmin = user?.role === "ADMIN";
@@ -45,24 +51,51 @@ export function AdminPage(): ReactElement {
 
   const cards = [
     {
+      key: "total",
       label: "Total users",
       value: stats.data?.total_users.toLocaleString() ?? "—",
       icon: Users,
+      active: !listenersOnly && filter === "all" && sortMode === "newest",
+      hint: undefined,
+      onClick: () => {
+        setFilter("all");
+        setListenersOnly(false);
+        setSortMode("newest");
+      },
     },
     {
+      key: "active",
       label: "Active",
       value: stats.data?.active_users.toLocaleString() ?? "—",
       icon: PlayCircle,
+      active: filter === "active" && !listenersOnly,
+      onClick: () => {
+        setFilter("active");
+        setListenersOnly(false);
+      },
     },
     {
+      key: "inactive",
       label: "Inactive",
       value: stats.data?.inactive_users.toLocaleString() ?? "—",
       icon: PauseCircle,
+      active: filter === "inactive" && !listenersOnly,
+      onClick: () => {
+        setFilter("inactive");
+        setListenersOnly(false);
+      },
     },
     {
+      key: "listen",
       label: "Listening time",
       value: stats.data ? formatListenTime(stats.data.total_listen_seconds) : "—",
       icon: Clock3,
+      active: sortMode === "listen",
+      onClick: () => {
+        setSortMode("listen");
+        setListenersOnly(false);
+        setFilter("all");
+      },
     },
   ];
 
@@ -70,18 +103,31 @@ export function AdminPage(): ReactElement {
     <div>
       <PageHeader
         title="Admin"
-        subtitle="Manage accounts, activation, and listening totals."
+        subtitle="Manage accounts, activation, and listening totals. Click a user to open their profile."
       />
 
       <div className="mb-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="rounded-2xl border border-ms-border bg-ms-surface p-5">
+        {cards.map(({ key, label, value, icon: Icon, active, onClick }) => (
+          <button
+            key={key}
+            type="button"
+            onClick={onClick}
+            className={cn(
+              "rounded-2xl border bg-ms-surface p-5 text-left transition hover:border-ms-primary/60",
+              active ? "border-ms-primary ring-1 ring-ms-primary/40" : "border-ms-border",
+            )}
+          >
             <div className="mb-3 flex items-center justify-between">
               <p className="text-sm text-ms-muted">{label}</p>
               <Icon size={18} className="text-ms-primary" />
             </div>
             <p className="font-display text-3xl font-bold">{value}</p>
-          </div>
+            {key === "listen" ? (
+              <p className="mt-2 text-xs text-ms-muted">
+                Click to sort everyone by playtime
+              </p>
+            ) : null}
+          </button>
         ))}
       </div>
 
@@ -94,15 +140,62 @@ export function AdminPage(): ReactElement {
                 <button
                   key={key}
                   type="button"
-                  onClick={() => setFilter(key)}
+                  onClick={() => {
+                    setFilter(key);
+                    setListenersOnly(false);
+                  }}
                   className={cn(
                     "rounded-full px-3 py-1.5 capitalize transition",
-                    filter === key ? "bg-ms-primary text-black" : "text-ms-muted hover:text-ms-text",
+                    filter === key && !listenersOnly
+                      ? "bg-ms-primary text-black"
+                      : "text-ms-muted hover:text-ms-text",
                   )}
                 >
                   {key}
                 </button>
               ))}
+            </div>
+            <div className="flex rounded-full border border-ms-border bg-ms-elevated p-1 text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => {
+                  setSortMode("newest");
+                  setListenersOnly(false);
+                }}
+                className={cn(
+                  "rounded-full px-3 py-1.5 transition",
+                  sortMode === "newest" && !listenersOnly
+                    ? "bg-ms-primary text-black"
+                    : "text-ms-muted hover:text-ms-text",
+                )}
+              >
+                Newest
+              </button>
+              <button
+                type="button"
+                onClick={() => setSortMode("listen")}
+                className={cn(
+                  "rounded-full px-3 py-1.5 transition",
+                  sortMode === "listen"
+                    ? "bg-ms-primary text-black"
+                    : "text-ms-muted hover:text-ms-text",
+                )}
+              >
+                Playtime
+              </button>
+              <button
+                type="button"
+                onClick={() => setListenersOnly((v) => !v)}
+                className={cn(
+                  "rounded-full px-3 py-1.5 transition",
+                  listenersOnly
+                    ? "bg-ms-primary text-black"
+                    : "text-ms-muted hover:text-ms-text",
+                )}
+                title="Only users with listening time"
+              >
+                Listeners
+              </button>
             </div>
             <form
               className="flex gap-2"
@@ -152,15 +245,20 @@ export function AdminPage(): ReactElement {
                   return (
                     <tr key={row.id} className="border-b border-ms-border/60">
                       <td className="py-3 pr-4">
-                        <div className="flex items-center gap-3">
+                        <Link
+                          to={`/admin/users/${row.id}`}
+                          className="flex items-center gap-3 rounded-lg transition hover:bg-white/5"
+                        >
                           <Avatar name={row.display_name} imageUrl={row.avatar_url} />
                           <div className="min-w-0">
-                            <p className="truncate font-semibold">{row.display_name}</p>
+                            <p className="truncate font-semibold hover:underline">
+                              {row.display_name}
+                            </p>
                             <p className="truncate text-xs text-ms-muted">
                               @{row.username} · {row.email}
                             </p>
                           </div>
-                        </div>
+                        </Link>
                       </td>
                       <td className="py-3 pr-4 text-ms-muted">{row.role}</td>
                       <td className="py-3 pr-4">
@@ -179,25 +277,32 @@ export function AdminPage(): ReactElement {
                         {formatListenTime(row.total_listen_seconds)}
                       </td>
                       <td className="py-3 text-right">
-                        <Button
-                          size="sm"
-                          variant={row.is_active ? "danger" : "secondary"}
-                          disabled={isSelf || busy}
-                          onClick={() =>
-                            void setActive.mutateAsync({
-                              userId: row.id,
-                              is_active: !row.is_active,
-                            })
-                          }
-                        >
-                          {busy
-                            ? "Saving…"
-                            : isSelf
-                              ? "You"
-                              : row.is_active
-                                ? "Deactivate"
-                                : "Activate"}
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          <Link to={`/admin/users/${row.id}`}>
+                            <Button size="sm" variant="secondary">
+                              Profile
+                            </Button>
+                          </Link>
+                          <Button
+                            size="sm"
+                            variant={row.is_active ? "danger" : "secondary"}
+                            disabled={isSelf || busy}
+                            onClick={() =>
+                              void setActive.mutateAsync({
+                                userId: row.id,
+                                is_active: !row.is_active,
+                              })
+                            }
+                          >
+                            {busy
+                              ? "Saving…"
+                              : isSelf
+                                ? "You"
+                                : row.is_active
+                                  ? "Deactivate"
+                                  : "Activate"}
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );

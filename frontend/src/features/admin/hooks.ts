@@ -6,6 +6,7 @@ export const adminKeys = {
   all: ["admin"] as const,
   stats: () => [...adminKeys.all, "stats"] as const,
   users: (params: AdminUserListParams) => [...adminKeys.all, "users", params] as const,
+  user: (id: string) => [...adminKeys.all, "user", id] as const,
 };
 
 export function useAdminStatsQuery(enabled = true) {
@@ -21,6 +22,14 @@ export function useAdminUsersQuery(params: AdminUserListParams, enabled = true) 
     queryKey: adminKeys.users(params),
     queryFn: () => adminApi.listUsers(params),
     enabled,
+  });
+}
+
+export function useAdminUserQuery(userId: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: adminKeys.user(userId ?? ""),
+    queryFn: () => adminApi.getUser(userId!),
+    enabled: Boolean(userId) && enabled,
   });
 }
 

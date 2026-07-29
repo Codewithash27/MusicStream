@@ -5,6 +5,7 @@ import { AppShell } from "../layouts/app-shell";
 import { MarketingShell } from "../layouts/marketing-shell";
 import { AlbumPage } from "../pages/album-page";
 import { AdminPage } from "../pages/admin-page";
+import { AdminUserPage } from "../pages/admin-user-page";
 import { ArtistPage } from "../pages/artist-page";
 import { DashboardPage } from "../pages/dashboard-page";
 import { HomePage } from "../pages/home-page";
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
           { path: "/upload", element: <UploadSongPage /> },
           { path: "/dashboard", element: <DashboardPage /> },
           { path: "/admin", element: <AdminPage /> },
+          { path: "/admin/users/:id", element: <AdminUserPage /> },
           { path: "/settings", element: <SettingsPage /> },
           { path: "/profile", element: <ProfilePage /> },
         ],

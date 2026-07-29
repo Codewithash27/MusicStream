@@ -24,6 +24,10 @@ export const libraryApi = {
     await api.delete(`/songs/${songId}/like`);
   },
 
+  reportListening: async (songId: string, seconds: number): Promise<void> => {
+    await api.post("/me/listening", { song_id: songId, seconds });
+  },
+
   recentlyPlayed: async (
     params: { skip?: number; limit?: number } = {},
   ): Promise<SongListResponse> => {

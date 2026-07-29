@@ -6,7 +6,7 @@ import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Response, status
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import get_db
@@ -22,6 +22,17 @@ class LikedIdsResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     song_ids: list[uuid.UUID]
+
+
+class ListeningReport(BaseModel):
+    """Real seconds listened since the previous report."""
+
+    song_id: uuid.UUID
+    seconds: int = Field(..., ge=1, le=600)
+
+
+class ListeningReportResponse(BaseModel):
+    recorded_seconds: int
 
 
 def get_like_service(
@@ -91,6 +102,31 @@ async def unlike_song(
 ) -> Response:
     await service.unlike(user=user, song_id=song_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/me/listening",
+    response_model=ListeningReportResponse,
+    summary="Report seconds actually listened",
+    description=(
+        "Adds real listening time for the current user. The player reports "
+        "elapsed audio time periodically, so partial listens are counted "
+        "accurately instead of crediting the whole track on play."
+    ),
+)
+async def report_listening(
+    payload: ListeningReport,
+    user: CurrentUser,
+    service: Annotated[PlayHistoryService, Depends(get_play_history_service)],
+    session: Annotated[AsyncSession, Depends(get_db)],
+) -> ListeningReportResponse:
+    recorded = await service.add_listening(
+        user_id=user.id,
+        song_id=payload.song_id,
+        seconds=payload.seconds,
+    )
+    await session.commit()
+    return ListeningReportResponse(recorded_seconds=recorded)
 
 
 @router.get(

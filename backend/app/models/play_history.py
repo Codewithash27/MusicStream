@@ -5,7 +5,7 @@ from __future__ import annotations
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import ForeignKey, UniqueConstraint
+from sqlalchemy import ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -18,9 +18,9 @@ if TYPE_CHECKING:
 
 class PlayHistory(BaseModel):
     """
-    Per-user recently played song.
+    Per-user recently / most-played song.
 
-    One row per (user, song); ``updated_at`` is refreshed on each play.
+    One row per (user, song); ``updated_at`` and ``play_count`` refresh on each play.
     """
 
     __tablename__ = "play_history"
@@ -39,6 +39,18 @@ class PlayHistory(BaseModel):
         ForeignKey("songs.id", ondelete="CASCADE"),
         nullable=False,
         index=True,
+    )
+    play_count: Mapped[int] = mapped_column(
+        Integer,
+        default=1,
+        server_default="1",
+        nullable=False,
+    )
+    listened_seconds: Mapped[int] = mapped_column(
+        Integer,
+        default=0,
+        server_default="0",
+        nullable=False,
     )
 
     user: Mapped[User] = relationship("User", back_populates="play_history")
