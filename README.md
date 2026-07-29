@@ -1,41 +1,97 @@
 # MusicStream
 
-Spotify-style music streaming app — **FastAPI** backend + **React (Vite)** frontend.
+Spotify-style music streaming app built with **FastAPI** + **React (Vite)**.
 
-You upload songs as the artist. You share one link with a few friends (about **3–4 people**). They only **listen** — they do not upload.
+Upload tracks as an artist, share one link with friends, and let them listen — with private playlists, likes, real listening-time tracking, and an admin panel.
 
-**Step-by-step free deploy (recommended):** [DEPLOY_WALKTHROUGH.md](./DEPLOY_WALKTHROUGH.md)  
-Formal project write-up: [REPORT.md](./REPORT.md)
-
----
-
-## Yes — free sharing works for a small friend group
-
-This is **not** built here for 50 / 100 / 1000 users. For **3–4 friends listening**, free tiers are enough.
-
-| Part | Free service | Why you need it |
-|------|----------------|-----------------|
-| Website UI | **Vercel** | The link you send friends |
-| API | **Render** | Login + song list (sleeps when idle → first open can be slow) |
-| Database + files | **Supabase** | Accounts, song metadata, MP3s, covers, avatars |
-
-**Recommended free combo:** **Vercel + Render + Supabase** (database and storage in one Supabase project).
-
-### What your friends do
-
-1. Open your **Vercel** link.  
-2. Register as **Listener** (not Artist).  
-3. Open Home / Search / Library and play.
-
-They **only listen**. Only **you** (Artist) upload tracks.
+**Live frontend:** [music-stream-eight-zeta.vercel.app](https://music-stream-eight-zeta.vercel.app)  
+**API:** [musicstream-x01y.onrender.com](https://musicstream-x01y.onrender.com)  
+**Deploy walkthrough:** [DEPLOY_WALKTHROUGH.md](./DEPLOY_WALKTHROUGH.md)
 
 ---
 
-## Important limitation
+## Screenshots
 
-Vercel alone cannot run the FastAPI API or store MP3 files. Use **Vercel (UI) + Render (API) + Supabase (DB + Storage)**.
+Captured in **Google Chrome** at **1440×900**.
 
-All uploads (songs, covers, avatars) go to **Supabase Storage** public buckets so friends can stream audio from anywhere.
+### Landing
+
+![Landing page](docs/screenshots/01-landing.png)
+
+### Login
+
+![Login page](docs/screenshots/02-login.png)
+
+### Home
+
+![Home feed](docs/screenshots/03-home.png)
+
+### Search & browse
+
+![Search page](docs/screenshots/04-search.png)
+
+### Library & playlists
+
+![Library page](docs/screenshots/05-library.png)
+
+### Playlist detail (collage cover)
+
+![Playlist page](docs/screenshots/06-playlist.png)
+
+### Admin — users & listening time
+
+![Admin dashboard](docs/screenshots/07-admin.png)
+
+---
+
+## Demo logins
+
+Use these accounts to try the live site (for friends / reviewers).
+
+| Role | Username | Password | Notes |
+|------|----------|----------|--------|
+| **Listener** | `Batata_Vada` | `Aman@2004` | Normal user — listen, like, playlists |
+| **Admin** | `Lucifer` | `Aman@27052004` | Admin panel, upload, manage users |
+
+<details>
+<summary>Credential screenshots</summary>
+
+**Listener — Batata_Vada**
+
+![Demo listener credentials](docs/screenshots/demo-user-batata-vada.png)
+
+**Admin — Lucifer**
+
+![Demo admin credentials](docs/screenshots/demo-admin-lucifer.png)
+
+</details>
+
+> Prefer registering your own **Listener** account if you only want to stream.
+
+---
+
+## Features
+
+- Stream songs with a full player (shuffle, repeat, queue, now-playing card)
+- Like songs and keep a private library
+- Create **private** playlists (isolated per user) with collage covers, remove, and drag-reorder
+- Artist upload (audio + cover) via Supabase Storage
+- Real listening-time tracking (partial plays count correctly)
+- Admin: activate / deactivate users, sort by playtime, open user profiles & most-played songs
+- Responsive UI for phone, tablet, laptop, and ultrawide
+
+---
+
+## Stack
+
+| Layer | Tech |
+|-------|------|
+| Frontend | React, Vite, TypeScript, Tailwind, TanStack Query, Zustand |
+| Backend | FastAPI, SQLAlchemy (async), Alembic, Pydantic |
+| Auth | JWT access + refresh tokens |
+| Database | PostgreSQL (Supabase) |
+| Files | Supabase Storage (`songs`, `covers`, `avatars`) |
+| Hosting | Vercel (UI) + Render (API) |
 
 ---
 
@@ -46,11 +102,11 @@ All uploads (songs, covers, avatars) go to **Supabase Storage** public buckets s
 ```bash
 cd backend
 python -m venv .venv
-# Windows:
+# Windows
 .\.venv\Scripts\activate
 pip install -r requirements.txt
 copy .env.example .env
-# Edit .env → DATABASE_URL, JWT_SECRET_KEY, SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, etc.
+# Fill DATABASE_URL, JWT_SECRET_KEY, SUPABASE_* …
 alembic upgrade head
 uvicorn app.main:app --reload
 ```
@@ -63,153 +119,32 @@ API docs: http://127.0.0.1:8000/docs
 cd frontend
 npm install
 copy .env.example .env
+# VITE_API_URL=http://127.0.0.1:8000/api/v1
 npm run dev
 ```
 
 App: http://localhost:5173
 
----
+### Recapture README screenshots (Chrome)
 
-## Free production deploy (share with 3–4 friends)
-
-### 1) Supabase (database)
-
-1. Create a free project (or keep the one you already have).  
-2. Copy the Postgres connection string.  
-3. If the password contains `@`, URL-encode it as `%40`.  
-4. Use the **async** form:
-
-```env
-DATABASE_URL=postgresql+asyncpg://postgres:YOUR_PASSWORD@db.XXXX.supabase.co:5432/postgres
-```
-
-Run migrations once:
+With the frontend running locally:
 
 ```bash
-cd backend
-alembic upgrade head
+npm install --no-save puppeteer-core
+node scripts/capture-readme-screenshots.mjs
 ```
 
-### 2) Supabase Storage (audio + covers + avatars)
-
-Needed so MP3s stay online for friends.
-
-1. In the same Supabase project → **Storage**.  
-2. Create three **public** buckets: `songs`, `covers`, `avatars`.  
-3. **Project Settings → API** → copy:
-   - **Project URL** → `SUPABASE_URL` (e.g. `https://your-project.supabase.co`)
-   - **service_role** key → `SUPABASE_SERVICE_ROLE_KEY` (keep secret; backend only)
-
-```env
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-SUPABASE_STORAGE_BUCKET_SONGS=songs
-SUPABASE_STORAGE_BUCKET_COVERS=covers
-SUPABASE_STORAGE_BUCKET_AVATARS=avatars
-```
-
-### 3) Backend on Render (free)
-
-1. [Render](https://dashboard.render.com) → **New → Web Service**.  
-2. Connect `https://github.com/Codewithash27/MusicStream.git`.  
-3. Settings:
-
-| Setting | Value |
-|---------|--------|
-| Root Directory | `backend` |
-| Runtime | Python 3 |
-| Build Command | `pip install -r requirements.txt` |
-| Start Command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
-
-4. Environment variables:
-
-```env
-APP_NAME=MusicStream
-APP_ENV=production
-APP_DEBUG=false
-API_V1_PREFIX=/api/v1
-DATABASE_URL=postgresql+asyncpg://...
-JWT_SECRET_KEY=<long-random-secret>
-JWT_ALGORITHM=HS256
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
-JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
-CORS_ORIGINS=https://YOUR-FRONTEND.vercel.app
-CORS_ALLOW_CREDENTIALS=true
-CORS_ALLOW_METHODS=*
-CORS_ALLOW_HEADERS=*
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-SUPABASE_STORAGE_BUCKET_SONGS=songs
-SUPABASE_STORAGE_BUCKET_COVERS=covers
-SUPABASE_STORAGE_BUCKET_AVATARS=avatars
-MAX_AUDIO_UPLOAD_BYTES=26214400
-MAX_COVER_UPLOAD_BYTES=5242880
-MAX_AVATAR_UPLOAD_BYTES=5242880
-```
-
-5. Deploy. Health check: `https://YOUR-API.onrender.com/api/v1/health`
-
-> Free Render **sleeps when idle**. The first open after a while can take 30–60s — fine for a few friends.
-
-### 4) Frontend on Vercel (free)
-
-1. [Vercel](https://vercel.com) → import the same GitHub repo.  
-2. Configure:
-
-| Setting | Value |
-|---------|--------|
-| Root Directory | `frontend` |
-| Framework | Vite |
-| Build Command | `npm run build` |
-| Output Directory | `dist` |
-
-3. Env:
-
-```env
-VITE_APP_NAME=MusicStream
-VITE_API_URL=https://YOUR-API.onrender.com/api/v1
-```
-
-4. Deploy → you get something like `https://musicstream.vercel.app`.  
-5. Put that exact URL in Render `CORS_ORIGINS` and redeploy the API.
-
-### 5) You upload · friends only listen
-
-**You (once):**
-
-1. Open the Vercel URL.  
-2. Register / log in as **Artist**.  
-3. Upload your MP3s on **Upload** (after Supabase Storage buckets are configured).
-
-**Friends (3–4 people):**
-
-1. You send them the **Vercel link**.  
-2. They register as **Listener**.  
-3. They play songs on Home / Search / Library.  
-4. They never need Upload.
-
-**Share:** `https://YOUR-APP.vercel.app`
+Screenshots land in `docs/screenshots/` (1440×900).
 
 ---
 
-## Checklist before sending the link
+## Roles
 
-- [ ] DB migrated (`alembic upgrade head`)  
-- [ ] Supabase Storage buckets (`songs`, `covers`, `avatars`) created and public  
-- [ ] Render health is OK  
-- [ ] A song uploaded **after** storage is configured  
-- [ ] Vercel `VITE_API_URL` → Render `/api/v1`  
-- [ ] Render `CORS_ORIGINS` = exact Vercel URL  
-- [ ] You tested play in an Incognito window as a Listener  
-
----
-
-## Roles (simple)
-
-| Who | Role | What they do |
-|-----|------|----------------|
-| You | Artist | Upload + listen |
-| Friends | Listener | Listen only |
+| Who | Role | Can do |
+|-----|------|--------|
+| Friends | Listener / USER | Listen, like, private playlists |
+| You | ARTIST | Upload + listen |
+| You | ADMIN | Users panel, activate/deactivate, listening totals |
 
 ---
 
@@ -217,10 +152,11 @@ VITE_API_URL=https://YOUR-API.onrender.com/api/v1
 
 ```
 MusicStream/
-├── backend/
-├── frontend/
-├── REPORT.md
-├── .gitignore
+├── backend/                 # FastAPI API + Alembic migrations
+├── frontend/                # React (Vite) app
+├── docs/screenshots/        # README images (Chrome captures)
+├── scripts/                 # Helper scripts (screenshot capture, etc.)
+├── DEPLOY_WALKTHROUGH.md
 └── README.md
 ```
 
@@ -228,14 +164,14 @@ Never commit real `.env` files — only `.env.example`.
 
 ---
 
-## Push docs to GitHub
+## Free production deploy (short)
 
-```powershell
-cd d:\Music
-git add README.md REPORT.md
-git commit -m "Add free deploy README and project report"
-git push origin main
-```
+1. **Supabase** — Postgres + public Storage buckets `songs`, `covers`, `avatars`
+2. **Render** — deploy `backend/` with `DATABASE_URL`, JWT, Supabase keys, `CORS_ORIGINS`
+3. **Vercel** — deploy `frontend/` with `VITE_API_URL=https://YOUR-API.onrender.com/api/v1`
+4. Point Render `CORS_ORIGINS` at the exact Vercel URL and redeploy
+
+Full steps: [DEPLOY_WALKTHROUGH.md](./DEPLOY_WALKTHROUGH.md)
 
 ---
 
@@ -243,12 +179,11 @@ git push origin main
 
 | Problem | Fix |
 |---------|-----|
-| Friends see songs but no sound | Check Supabase buckets are public; re-upload songs |
-| CORS / network errors | Fix `CORS_ORIGINS`, redeploy API |
-| Wrong API on Vercel | Rebuild after setting `VITE_API_URL` |
-| First load very slow | Render cold start — wait and refresh |
-| Login fails in prod | Check `DATABASE_URL` and `JWT_SECRET_KEY` on Render |
-| Upload fails | Verify `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` on Render |
+| Songs load but no sound | Public Supabase buckets; re-upload after storage is configured |
+| CORS / network errors | Match `CORS_ORIGINS` to the Vercel URL exactly |
+| First load very slow | Render free tier cold start — wait ~30–60s and refresh |
+| Login fails in prod | Check `DATABASE_URL` + `JWT_SECRET_KEY` on Render |
+| Someone sees your playlist | Playlists are private; hard-refresh after latest deploy |
 
 ---
 
